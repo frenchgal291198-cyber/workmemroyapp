@@ -22,6 +22,7 @@ for (const p of data.projects) {
   for (const l of [].concat(p.league)) {
     if (!LEAGUES.includes(l)) throw new Error(`${p.id}: bad league "${l}"`);
   }
+  if (p.scope !== undefined && !Array.isArray(p.scope)) throw new Error(`${p.id}: scope must be an array`);
   for (const e of p.recent || []) {
     if (!/^\d{4}-\d{2}(-\d{2})?$/.test(e.date)) throw new Error(`${p.id}: bad recent date "${e.date}"`);
   }

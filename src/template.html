@@ -241,6 +241,22 @@
   .row.open .row-sum { padding-right: 14px; }
   .row.open .row-sum .bar { border-radius: 6px 0 0 0; margin: 0; }
 
+  .scope {
+    margin: 14px 0 4px; padding: 14px 18px 12px; border-left: 3px solid var(--accent);
+    background: var(--surface-2); border-radius: 0 6px 6px 0; margin-right: 20px;
+  }
+  .scope .thesis { font-size: 14.5px; font-weight: 500; line-height: 1.45; margin: 0 0 8px; }
+  .scope .thesis::before {
+    content: "What they're changing"; display: block; font-family: var(--display); font-size: 13px;
+    font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent-ink); margin-bottom: 4px;
+  }
+  .scope ul { margin: 0; padding: 0; list-style: none; columns: 2; column-gap: 28px; }
+  @media (max-width: 760px) { .scope ul { columns: 1; } }
+  .scope li {
+    font-size: 13.5px; line-height: 1.45; padding: 3px 0 3px 14px; position: relative; break-inside: avoid;
+  }
+  .scope li::before { content: ""; position: absolute; left: 0; top: 10px; width: 6px; height: 6px; border-radius: 1px; background: var(--accent); }
+  .scope .none { font-size: 13.5px; color: var(--muted); margin: 0; }
   .facts {
     display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px 24px; margin: 14px 0 10px;
     padding-right: 20px;
@@ -303,7 +319,7 @@
   <section id="register">
     <div class="sec-head">
       <h2>Project register</h2>
-      <span class="hint">Click a row for cost, funding, timeline, changes and sources.</span>
+      <span class="hint">Click a row for what they're changing, cost, funding, timeline and sources.</span>
     </div>
     <div class="filters" id="filters"></div>
     <div id="groups"></div>
@@ -418,7 +434,7 @@
     el.innerHTML = `
       <div class="chips" id="lg-chips">${LEAGUES.map(l => `<button class="chip" data-lg="${l}" aria-pressed="${state.leagues.has(l)}">${l}</button>`).join("")}</div>
       <div class="chips" id="st-chips">${STAGES.map(([k, label]) => `<button class="chip st" style="--st:var(--s-${k})" data-st="${k}" aria-pressed="${state.stage === k}">${esc(label)}</button>`).join("")}</div>
-      <input class="search" type="search" placeholder="Search team, venue, city" value="${esc(state.q)}" aria-label="Search projects">
+      <input class="search" type="search" placeholder="Search team, venue, or scope (e.g. suites, roof)" value="${esc(state.q)}" aria-label="Search projects">
       <span class="fcount" id="fcount"></span>`;
     el.querySelectorAll("[data-lg]").forEach(b => b.addEventListener("click", () => {
       const l = b.dataset.lg; state.leagues.has(l) ? state.leagues.delete(l) : state.leagues.add(l);
@@ -437,7 +453,7 @@
     if (state.leagues.size && !p.leagues.some(l => state.leagues.has(l))) return false;
     if (state.q) {
       const q = state.q.toLowerCase();
-      const hay = [p.team, p.venue, p.city, p.state, p.headline].join(" ").toLowerCase();
+      const hay = [p.team, p.venue, p.city, p.state, p.headline, p.thesis, ...(p.scope || [])].join(" ").toLowerCase();
       if (!hay.includes(q)) return false;
     }
     return true;
@@ -466,6 +482,15 @@
     }));
   }
 
+  function renderScope(p) {
+    const has = (p.scope && p.scope.length) || p.thesis;
+    if (!has) return `<div class="scope"><p class="thesis"></p><p class="none">Scope not yet public.</p></div>`;
+    return `<div class="scope">
+      <p class="thesis">${esc(p.thesis || "")}</p>
+      ${p.scope && p.scope.length ? `<ul>${p.scope.map(t => `<li>${esc(t)}</li>`).join("")}</ul>` : `<p class="none">Scope not yet public.</p>`}
+    </div>`;
+  }
+
   function renderRow(p) {
     const nm = p.next_milestone;
     const conf = p.confidence === "check" ? `<span class="conf warn">check</span>` : "";
@@ -483,6 +508,7 @@
         </span>
       </button>
       <div class="row-detail">
+        ${renderScope(p)}
         <div class="facts">
           <div class="fact"><div class="k">Project</div><div class="v">${esc(p.type)}</div></div>
           <div class="fact"><div class="k">Cost</div><div class="v num">${esc(money(p))}</div></div>

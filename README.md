@@ -33,6 +33,8 @@ The page opens with a dated "what moved" feed, then a filterable register where 
   "type": "New build, enclosed dome",
   "headline": "One-line current state shown in the register row",
   "status": "Two or three sentences of context",
+  "thesis": "One line on the experience idea behind the project",
+  "scope": ["Concrete physical changes: bowl, premium, concourses, F&B, roof, tech, district"],
   "cost": "$2.4B",
   "funding": "$1.2B private / $600M state / $600M local",
   "target": "2029 season",
