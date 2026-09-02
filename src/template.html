@@ -1,0 +1,512 @@
+<title>Bowl Report</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --ground: #F4F6F8;
+    --surface: #FFFFFF;
+    --surface-2: #EAEEF2;
+    --ink: #141C26;
+    --ink-2: #3A4757;
+    --muted: #5B6B7C;
+    --rule: #D8DEE5;
+    --rule-strong: #B9C3CE;
+    --accent: #C8871A;
+    --accent-ink: #8A5A0A;
+    --accent-soft: #F7E9CF;
+    --focus: #2F6FD6;
+
+    --s-open: #1D8A80;
+    --s-construction: #2F6FD6;
+    --s-approved: #2E8B57;
+    --s-proposed: #7B5CC7;
+    --s-stalled: #D2542B;
+    --s-dead: #7A8592;
+
+    --pill-bg-alpha: 0.12;
+    --shadow: 0 1px 2px rgba(20, 28, 38, 0.06), 0 6px 20px rgba(20, 28, 38, 0.06);
+
+    --display: "Barlow Condensed", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+    --body: "IBM Plex Sans", "Segoe UI", Helvetica, Arial, sans-serif;
+    --mono: "IBM Plex Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #0F151C;
+      --surface: #171F29;
+      --surface-2: #1F2935;
+      --ink: #E6ECF2;
+      --ink-2: #C3CDD8;
+      --muted: #8D9BAB;
+      --rule: #2A3542;
+      --rule-strong: #3B4756;
+      --accent: #E0A33A;
+      --accent-ink: #F0C46A;
+      --accent-soft: #3A2C12;
+      --focus: #6FA2F2;
+      --s-open: #3FB3A8;
+      --s-construction: #6FA2F2;
+      --s-approved: #5BB882;
+      --s-proposed: #A98BE8;
+      --s-stalled: #F07B52;
+      --s-dead: #95A1AE;
+      --pill-bg-alpha: 0.18;
+      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 6px 20px rgba(0,0,0,0.25);
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground: #0F151C;
+    --surface: #171F29;
+    --surface-2: #1F2935;
+    --ink: #E6ECF2;
+    --ink-2: #C3CDD8;
+    --muted: #8D9BAB;
+    --rule: #2A3542;
+    --rule-strong: #3B4756;
+    --accent: #E0A33A;
+    --accent-ink: #F0C46A;
+    --accent-soft: #3A2C12;
+    --focus: #6FA2F2;
+    --s-open: #3FB3A8;
+    --s-construction: #6FA2F2;
+    --s-approved: #5BB882;
+    --s-proposed: #A98BE8;
+    --s-stalled: #F07B52;
+    --s-dead: #95A1AE;
+    --pill-bg-alpha: 0.18;
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 6px 20px rgba(0,0,0,0.25);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: 15px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: var(--accent-ink); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+  button { font: inherit; color: inherit; }
+  :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 24px; }
+
+  /* ---------- Header ---------- */
+  header.top {
+    border-bottom: 1px solid var(--rule);
+    background: var(--surface);
+  }
+  .top .wrap {
+    display: flex; align-items: flex-end; justify-content: space-between; gap: 24px;
+    padding-top: 28px; padding-bottom: 20px; flex-wrap: wrap;
+  }
+  .brand h1 {
+    font-family: var(--display); font-weight: 700; font-size: 44px; line-height: 0.95;
+    letter-spacing: 0.01em; margin: 0; text-transform: uppercase;
+  }
+  .brand h1 span { color: var(--accent); }
+  .brand p { margin: 8px 0 0; color: var(--muted); max-width: 62ch; }
+  .asof {
+    font-family: var(--mono); font-size: 12.5px; color: var(--muted);
+    text-align: right; line-height: 1.6;
+  }
+  .asof b { color: var(--ink); font-weight: 500; }
+
+  /* ---------- Stat strip ---------- */
+  .strip { border-bottom: 1px solid var(--rule); background: var(--surface); }
+  .strip .wrap { display: grid; grid-template-columns: repeat(6, 1fr); }
+  .stat {
+    padding: 16px 12px 14px; border: 0; background: none; text-align: left; cursor: pointer;
+    border-left: 1px solid var(--rule); position: relative;
+  }
+  .stat:first-child { border-left: 0; padding-left: 0; }
+  .stat .n {
+    font-family: var(--display); font-weight: 700; font-size: 40px; line-height: 1;
+    font-variant-numeric: tabular-nums; color: var(--st);
+  }
+  .stat .l {
+    display: block; margin-top: 4px; font-size: 11.5px; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--muted); font-weight: 500;
+  }
+  .stat[aria-pressed="true"] { background: var(--surface-2); }
+  .stat[aria-pressed="true"]::after {
+    content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 3px; background: var(--st);
+  }
+  .stat:hover .l { color: var(--ink); }
+  @media (max-width: 760px) {
+    .strip .wrap { grid-template-columns: repeat(3, 1fr); }
+    .stat:nth-child(4) { border-left: 0; padding-left: 0; }
+    .stat { border-top: 1px solid var(--rule); }
+    .stat:nth-child(-n+3) { border-top: 0; }
+  }
+
+  /* ---------- Sections ---------- */
+  section { padding: 32px 0 8px; }
+  .sec-head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin-bottom: 14px; }
+  .sec-head h2 {
+    font-family: var(--display); font-weight: 600; font-size: 26px; text-transform: uppercase;
+    letter-spacing: 0.02em; margin: 0; line-height: 1;
+  }
+  .sec-head .hint { color: var(--muted); font-size: 13px; }
+
+  /* ---------- Change feed ---------- */
+  .feed { display: grid; grid-template-columns: 1fr 1fr; gap: 0 32px; }
+  @media (max-width: 860px) { .feed { grid-template-columns: 1fr; } }
+  .feed-col { display: flex; flex-direction: column; }
+  .fitem {
+    display: grid; grid-template-columns: 84px 1fr; gap: 12px; padding: 10px 0;
+    border-top: 1px solid var(--rule); align-items: start;
+  }
+  .fitem:first-child { border-top: 0; }
+  .fitem .d { font-family: var(--mono); font-size: 12.5px; color: var(--muted); padding-top: 2px; white-space: nowrap; }
+  .fitem .t { font-size: 14px; line-height: 1.45; }
+  .fitem .t button {
+    background: none; border: 0; padding: 0; cursor: pointer; font-weight: 600; color: var(--ink);
+    text-align: left;
+  }
+  .fitem .t button:hover { color: var(--accent-ink); }
+  .fitem .t .lg { font-family: var(--mono); font-size: 11px; color: var(--muted); margin-left: 6px; }
+  .fitem .t .lg::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 2px; background: var(--st); margin-right: 5px; vertical-align: -0.5px; }
+  .feed-more { margin-top: 10px; }
+  .feed-more button, .linkbtn {
+    background: none; border: 0; padding: 0; color: var(--accent-ink); cursor: pointer;
+    text-decoration: underline; text-underline-offset: 2px; font-size: 13.5px;
+  }
+
+  /* ---------- Filters ---------- */
+  .filters {
+    position: sticky; top: 0; z-index: 5; background: var(--ground);
+    padding: 12px 0; border-bottom: 1px solid var(--rule);
+    display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center;
+  }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip {
+    border: 1px solid var(--rule-strong); background: var(--surface); border-radius: 999px;
+    padding: 4px 11px; font-size: 12.5px; font-weight: 500; cursor: pointer; line-height: 1.3;
+  }
+  .chip[aria-pressed="true"] { background: var(--ink); color: var(--ground); border-color: var(--ink); }
+  .chip.st[aria-pressed="true"] { background: var(--st); border-color: var(--st); color: #fff; }
+  .search {
+    margin-left: auto; min-width: 220px; flex: 1 1 220px; max-width: 320px;
+    border: 1px solid var(--rule-strong); background: var(--surface); color: var(--ink);
+    border-radius: 6px; padding: 6px 10px; font: inherit; font-size: 13.5px;
+  }
+  .fcount { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+
+  /* ---------- Register ---------- */
+  .league-group { margin-top: 22px; }
+  .league-head {
+    display: flex; align-items: baseline; gap: 12px; padding-bottom: 8px; border-bottom: 2px solid var(--ink);
+  }
+  .league-head h3 { font-family: var(--display); font-size: 22px; font-weight: 700; margin: 0; letter-spacing: 0.04em; }
+  .league-head .cnt { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+
+  .row { border-bottom: 1px solid var(--rule); background: var(--ground); }
+  .row-sum {
+    width: 100%; display: grid; grid-template-columns: 6px 1fr auto; gap: 14px; align-items: stretch;
+    padding: 0; background: none; border: 0; cursor: pointer; text-align: left;
+  }
+  .row-sum .bar { background: var(--st); border-radius: 0 2px 2px 0; margin: 10px 0; }
+  .row-sum .main { padding: 12px 0; min-width: 0; }
+  .row-sum .who { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: baseline; }
+  .row-sum .team { font-weight: 600; font-size: 15.5px; }
+  .row-sum .venue { color: var(--muted); font-size: 13.5px; }
+  .row-sum .head { margin-top: 3px; font-size: 14px; color: var(--ink-2); line-height: 1.45; }
+  .row-sum .meta {
+    display: flex; flex-direction: column; align-items: flex-end; gap: 6px; padding: 12px 0; white-space: nowrap;
+  }
+  .pill {
+    display: inline-block; font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
+    padding: 3px 8px; border-radius: 4px; color: var(--st);
+    background: color-mix(in srgb, var(--st) calc(var(--pill-bg-alpha) * 100%), transparent);
+  }
+  .next { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+  .next b { font-weight: 500; color: var(--ink); }
+  .row-sum:hover .team { color: var(--accent-ink); }
+  @media (max-width: 640px) {
+    .row-sum { grid-template-columns: 6px 1fr; }
+    .row-sum .meta { grid-column: 2; flex-direction: row; padding-top: 0; align-items: center; flex-wrap: wrap; }
+  }
+
+  .row-detail {
+    display: none; padding: 4px 0 22px 20px; border-top: 1px dashed var(--rule);
+    margin-top: -1px;
+  }
+  .row.open .row-detail { display: block; }
+  .row.open { background: var(--surface); box-shadow: var(--shadow); border-radius: 6px; margin: 6px 0; border-bottom: 0; }
+  .row.open .row-sum .main, .row.open .row-sum .meta { padding-left: 0; }
+  .row.open .row-sum { padding-right: 14px; }
+  .row.open .row-sum .bar { border-radius: 6px 0 0 0; margin: 0; }
+
+  .facts {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px 24px; margin: 14px 0 10px;
+    padding-right: 20px;
+  }
+  @media (max-width: 760px) { .facts { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 480px) { .facts { grid-template-columns: 1fr; } }
+  .fact .k { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 500; }
+  .fact .v { font-size: 14px; margin-top: 2px; line-height: 1.45; }
+  .fact .v.num { font-family: var(--mono); font-size: 13px; }
+
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 32px; padding-right: 20px; }
+  @media (max-width: 860px) { .cols { grid-template-columns: 1fr; } }
+  .block h4 {
+    font-family: var(--display); font-size: 15px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em;
+    margin: 14px 0 6px; color: var(--ink-2);
+  }
+  .block ul { margin: 0; padding-left: 0; list-style: none; }
+  .block li { font-size: 13.5px; line-height: 1.5; padding: 4px 0; border-top: 1px solid var(--rule); }
+  .block li:first-child { border-top: 0; }
+  .block li .d { font-family: var(--mono); font-size: 12px; color: var(--muted); margin-right: 8px; }
+  .block li.q::before { content: "?"; font-family: var(--mono); color: var(--accent-ink); margin-right: 8px; font-weight: 500; }
+  .block li.c::before { content: "Δ"; font-family: var(--mono); color: var(--s-construction); margin-right: 8px; }
+  .srcs { margin-top: 12px; font-size: 12.5px; color: var(--muted); padding-right: 20px; }
+  .srcs a { margin-right: 12px; }
+  .conf { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+  .conf.warn { color: var(--s-stalled); }
+
+  .empty { padding: 40px 0; color: var(--muted); text-align: center; }
+
+  footer { padding: 32px 0 48px; color: var(--muted); font-size: 12.5px; border-top: 1px solid var(--rule); margin-top: 32px; }
+  footer p { margin: 4px 0; max-width: 78ch; }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .row { transition: background 120ms ease; }
+  }
+</style>
+
+<header class="top">
+  <div class="wrap">
+    <div class="brand">
+      <h1>Bowl <span>Report</span></h1>
+      <p>US pro-league venue capital projects: what is being built, what is stuck, and what moved. NFL, MLB, NBA, NHL, MLS, NWSL, WNBA.</p>
+    </div>
+    <div class="asof" id="asof"></div>
+  </div>
+</header>
+
+<div class="strip"><div class="wrap" id="strip"></div></div>
+
+<main class="wrap">
+  <section id="changes">
+    <div class="sec-head">
+      <h2>What moved</h2>
+      <span class="hint">Dated developments, newest first. Click a team to jump to its record.</span>
+    </div>
+    <div class="feed" id="feed"></div>
+    <div class="feed-more" id="feedmore"></div>
+  </section>
+
+  <section id="register">
+    <div class="sec-head">
+      <h2>Project register</h2>
+      <span class="hint">Click a row for cost, funding, timeline, changes and sources.</span>
+    </div>
+    <div class="filters" id="filters"></div>
+    <div id="groups"></div>
+  </section>
+</main>
+
+<footer class="wrap">
+  <p id="foot-note"></p>
+  <p>Cost figures are the latest public estimates and move often. Public/private splits are as announced, not as spent. Records marked <span class="conf warn">check</span> have conflicting or thin sourcing.</p>
+</footer>
+
+<script>
+(function () {
+  const DATA = /*__DATA__*/null;
+  const STAGES = [
+    ["construction", "Under construction"],
+    ["approved", "Approved / funded"],
+    ["proposed", "Proposed"],
+    ["stalled", "Stalled"],
+    ["open", "Opened / done"],
+    ["dead", "Dead"],
+  ];
+  const STAGE_LABEL = Object.fromEntries(STAGES);
+  const LEAGUES = ["NFL", "MLB", "NBA", "NHL", "MLS", "NWSL", "WNBA"];
+  const LEAGUE_NAME = {
+    NFL: "NFL", MLB: "MLB", NBA: "NBA", NHL: "NHL", MLS: "MLS", NWSL: "NWSL", WNBA: "WNBA",
+  };
+
+  const projects = DATA.projects.map(p => ({ ...p, leagues: [].concat(p.league) }));
+  const state = { stage: null, leagues: new Set(), q: "", feedAll: false };
+  try {
+    const saved = JSON.parse(localStorage.getItem("bowl-report-filters") || "null");
+    if (saved) { state.stage = saved.stage || null; state.leagues = new Set(saved.leagues || []); }
+  } catch (e) {}
+  function persist() {
+    try { localStorage.setItem("bowl-report-filters", JSON.stringify({ stage: state.stage, leagues: [...state.leagues] })); } catch (e) {}
+  }
+
+  const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const fmtDate = d => {
+    if (!d) return "";
+    const [y, m, day] = d.split("-");
+    const mon = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][+m - 1];
+    return day ? `${mon} ${+day}, ${y}` : `${mon} ${y}`;
+  };
+  const shortDate = d => {
+    if (!d) return "";
+    const [y, m, day] = d.split("-");
+    const mon = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][+m - 1];
+    return day ? `${mon} ${+day}` : `${mon} ${y}`;
+  };
+
+  // ---------- header ----------
+  document.getElementById("asof").innerHTML =
+    `As of <b>${esc(fmtDate(DATA.asOf))}</b><br>${projects.length} projects · ${LEAGUES.length} leagues<br>Change window: last ${DATA.changeWindowDays} days`;
+  document.getElementById("foot-note").textContent = DATA.note || "";
+
+  // ---------- stat strip ----------
+  function renderStrip() {
+    const el = document.getElementById("strip");
+    el.innerHTML = STAGES.map(([k, label]) => {
+      const n = projects.filter(p => p.stage === k).length;
+      return `<button class="stat" style="--st:var(--s-${k})" data-stage="${k}" aria-pressed="${state.stage === k}">
+        <span class="n">${n}</span><span class="l">${esc(label)}</span></button>`;
+    }).join("");
+    el.querySelectorAll(".stat").forEach(b => b.addEventListener("click", () => {
+      state.stage = state.stage === b.dataset.stage ? null : b.dataset.stage;
+      persist(); renderStrip(); renderFilters(); renderGroups();
+      document.getElementById("register").scrollIntoView({ behavior: "smooth", block: "start" });
+    }));
+  }
+
+  // ---------- feed ----------
+  function renderFeed() {
+    const cutoff = new Date(DATA.asOf); cutoff.setDate(cutoff.getDate() - DATA.changeWindowDays);
+    const items = [];
+    for (const p of projects) for (const e of p.recent || []) {
+      const d = new Date(e.date.length === 7 ? e.date + "-01" : e.date);
+      if (d >= cutoff) items.push({ p, e, d });
+    }
+    items.sort((a, b) => b.d - a.d);
+    const shown = state.feedAll ? items : items.slice(0, 16);
+    const half = Math.ceil(shown.length / 2);
+    const col = arr => `<div class="feed-col">${arr.map(({ p, e }) => `
+      <div class="fitem">
+        <span class="d">${esc(shortDate(e.date))}</span>
+        <span class="t"><button data-jump="${esc(p.id)}">${esc(p.team)}</button><span class="lg" style="--st:var(--s-${p.stage})">${esc(p.leagues.join("/"))}</span><br>${esc(e.text)}</span>
+      </div>`).join("")}</div>`;
+    document.getElementById("feed").innerHTML = col(shown.slice(0, half)) + col(shown.slice(half));
+    const more = document.getElementById("feedmore");
+    more.innerHTML = items.length > 16
+      ? `<button>${state.feedAll ? "Show fewer" : `Show all ${items.length} developments`}</button>` : "";
+    more.querySelector("button")?.addEventListener("click", () => { state.feedAll = !state.feedAll; renderFeed(); });
+    document.querySelectorAll("[data-jump]").forEach(b => b.addEventListener("click", () => jumpTo(b.dataset.jump)));
+  }
+
+  function jumpTo(id) {
+    state.stage = null; state.leagues.clear(); state.q = "";
+    renderStrip(); renderFilters(); renderGroups();
+    const row = document.getElementById("p-" + id);
+    if (!row) return;
+    row.classList.add("open");
+    row.querySelector(".row-sum").setAttribute("aria-expanded", "true");
+    row.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  // ---------- filters ----------
+  function renderFilters() {
+    const el = document.getElementById("filters");
+    el.innerHTML = `
+      <div class="chips" id="lg-chips">${LEAGUES.map(l => `<button class="chip" data-lg="${l}" aria-pressed="${state.leagues.has(l)}">${l}</button>`).join("")}</div>
+      <div class="chips" id="st-chips">${STAGES.map(([k, label]) => `<button class="chip st" style="--st:var(--s-${k})" data-st="${k}" aria-pressed="${state.stage === k}">${esc(label)}</button>`).join("")}</div>
+      <input class="search" type="search" placeholder="Search team, venue, city" value="${esc(state.q)}" aria-label="Search projects">
+      <span class="fcount" id="fcount"></span>`;
+    el.querySelectorAll("[data-lg]").forEach(b => b.addEventListener("click", () => {
+      const l = b.dataset.lg; state.leagues.has(l) ? state.leagues.delete(l) : state.leagues.add(l);
+      persist(); renderFilters(); renderGroups();
+    }));
+    el.querySelectorAll("[data-st]").forEach(b => b.addEventListener("click", () => {
+      state.stage = state.stage === b.dataset.st ? null : b.dataset.st;
+      persist(); renderStrip(); renderFilters(); renderGroups();
+    }));
+    const inp = el.querySelector(".search");
+    inp.addEventListener("input", () => { state.q = inp.value; renderGroups(); });
+  }
+
+  function matches(p) {
+    if (state.stage && p.stage !== state.stage) return false;
+    if (state.leagues.size && !p.leagues.some(l => state.leagues.has(l))) return false;
+    if (state.q) {
+      const q = state.q.toLowerCase();
+      const hay = [p.team, p.venue, p.city, p.state, p.headline].join(" ").toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  }
+
+  // ---------- register ----------
+  const money = p => p.cost ? p.cost : "Not disclosed";
+  function renderGroups() {
+    const el = document.getElementById("groups");
+    const vis = projects.filter(matches);
+    document.getElementById("fcount").textContent = `${vis.length} of ${projects.length}`;
+    if (!vis.length) { el.innerHTML = `<div class="empty">No projects match. Clear a filter.</div>`; return; }
+    const order = { construction: 0, approved: 1, proposed: 2, stalled: 3, open: 4, dead: 5 };
+    const html = LEAGUES.map(l => {
+      const rows = vis.filter(p => p.leagues[0] === l).sort((a, b) => (order[a.stage] - order[b.stage]) || a.team.localeCompare(b.team));
+      if (!rows.length) return "";
+      return `<div class="league-group">
+        <div class="league-head"><h3>${LEAGUE_NAME[l]}</h3><span class="cnt">${rows.length} project${rows.length === 1 ? "" : "s"}</span></div>
+        ${rows.map(renderRow).join("")}
+      </div>`;
+    }).join("");
+    el.innerHTML = html;
+    el.querySelectorAll(".row-sum").forEach(b => b.addEventListener("click", () => {
+      const row = b.closest(".row"); const open = row.classList.toggle("open");
+      b.setAttribute("aria-expanded", String(open));
+    }));
+  }
+
+  function renderRow(p) {
+    const nm = p.next_milestone;
+    const conf = p.confidence === "check" ? `<span class="conf warn">check</span>` : "";
+    return `<div class="row" id="p-${esc(p.id)}" style="--st:var(--s-${p.stage})">
+      <button class="row-sum" aria-expanded="false">
+        <span class="bar"></span>
+        <span class="main">
+          <span class="who"><span class="team">${esc(p.team)}</span><span class="venue">${esc(p.venue)} · ${esc(p.city)}, ${esc(p.state)}</span>${p.leagues.length > 1 ? `<span class="venue">${esc(p.leagues.join(" / "))}</span>` : ""}</span>
+          <span class="head">${esc(p.headline)}</span>
+        </span>
+        <span class="meta">
+          <span class="pill">${esc(STAGE_LABEL[p.stage])}</span>
+          ${nm ? `<span class="next">Next: <b>${esc(nm.date ? shortDate(nm.date) : "TBD")}</b> ${esc(nm.text)}</span>` : ""}
+          ${conf}
+        </span>
+      </button>
+      <div class="row-detail">
+        <div class="facts">
+          <div class="fact"><div class="k">Project</div><div class="v">${esc(p.type)}</div></div>
+          <div class="fact"><div class="k">Cost</div><div class="v num">${esc(money(p))}</div></div>
+          <div class="fact"><div class="k">Public / private</div><div class="v num">${esc(p.funding || "Not disclosed")}</div></div>
+          <div class="fact"><div class="k">Target open</div><div class="v num">${esc(p.target || "None set")}</div></div>
+          <div class="fact"><div class="k">Owner / operator</div><div class="v">${esc(p.owner || "See sources")}</div></div>
+          <div class="fact"><div class="k">Status</div><div class="v">${esc(p.status)}</div></div>
+        </div>
+        <div class="cols">
+          <div class="block">
+            <h4>Recent developments</h4>
+            <ul>${(p.recent || []).slice().sort((a, b) => b.date.localeCompare(a.date)).map(e => `<li><span class="d">${esc(fmtDate(e.date))}</span>${esc(e.text)}</li>`).join("") || "<li>None logged.</li>"}</ul>
+            <h4>Timeline</h4>
+            <ul>${(p.timeline || []).map(e => `<li><span class="d">${esc(e.date)}</span>${esc(e.text)}</li>`).join("") || "<li>None logged.</li>"}</ul>
+          </div>
+          <div class="block">
+            <h4>What changed vs. earlier plan</h4>
+            <ul>${(p.changes || []).map(t => `<li class="c">${esc(t)}</li>`).join("") || "<li>No scope or cost change recorded.</li>"}</ul>
+            <h4>Open questions</h4>
+            <ul>${(p.open_questions || []).map(t => `<li class="q">${esc(t)}</li>`).join("") || "<li>None.</li>"}</ul>
+          </div>
+        </div>
+        <div class="srcs">Sources: ${(p.sources || []).map(s => `<a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.title)}${s.date ? ` (${esc(s.date)})` : ""}</a>`).join("") || "none"}</div>
+      </div>
+    </div>`;
+  }
+
+  renderStrip(); renderFeed(); renderFilters(); renderGroups();
+})();
+</script>
