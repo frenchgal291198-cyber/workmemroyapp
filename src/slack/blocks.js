@@ -11,6 +11,11 @@ function profileModal(existing) {
     options: M.NEIGHBORHOODS.filter((n) => n.borough === b).map((n) => opt(n.name)),
   }));
   const interestOptions = S.INTERESTS.map((i) => opt(i));
+  const lower = (xs) => (xs || []).map((x) => String(x).toLowerCase());
+  const listedInterests = (e.interests || []).filter((i) => lower(S.INTERESTS).includes(i.toLowerCase()));
+  const customInterests = (e.interests || []).filter((i) => !lower(S.INTERESTS).includes(i.toLowerCase()));
+  const listedTeams = (e.teams || []).filter((t) => lower(S.TEAMS).includes(t.toLowerCase()));
+  const customTeams = (e.teams || []).filter((t) => !lower(S.TEAMS).includes(t.toLowerCase()));
   return {
     type: 'modal',
     callback_id: 'kyn_profile',
@@ -36,7 +41,27 @@ function profileModal(existing) {
         label: { type: 'plain_text', text: 'Interests & hobbies' },
         hint: { type: 'plain_text', text: 'Pick up to five.' },
         element: { type: 'multi_static_select', action_id: 'v', max_selected_items: 5, options: interestOptions,
-          ...(e.interests && e.interests.length ? { initial_options: e.interests.map((i) => opt(i)) } : {}) },
+          ...(listedInterests.length ? { initial_options: listedInterests.map((i) => opt(i)) } : {}) },
+      },
+      {
+        type: 'input', block_id: 'other_interests', optional: true,
+        label: { type: 'plain_text', text: 'Anything not on the list?' },
+        hint: { type: 'plain_text', text: 'Comma-separated. Write-ins match other people\'s write-ins.' },
+        element: { type: 'plain_text_input', action_id: 'v', placeholder: { type: 'plain_text', text: 'Dungeons & Dragons, roller skating' },
+          ...(customInterests.length ? { initial_value: customInterests.join(', ') } : {}) },
+      },
+      {
+        type: 'input', block_id: 'teams', optional: true,
+        label: { type: 'plain_text', text: 'Teams you follow' },
+        hint: { type: 'plain_text', text: 'A shared team scores like a shared restaurant. Up to four.' },
+        element: { type: 'multi_static_select', action_id: 'v', max_selected_items: 4, options: S.TEAMS.map((t) => opt(t)),
+          ...(listedTeams.length ? { initial_options: listedTeams.map((t) => opt(t)) } : {}) },
+      },
+      {
+        type: 'input', block_id: 'other_teams', optional: true,
+        label: { type: 'plain_text', text: 'Other teams, any sport or college' },
+        element: { type: 'plain_text_input', action_id: 'v', placeholder: { type: 'plain_text', text: 'Arsenal, Syracuse basketball' },
+          ...(customTeams.length ? { initial_value: customTeams.join(', ') } : {}) },
       },
       {
         type: 'input', block_id: 'restaurants', optional: true,
@@ -51,13 +76,16 @@ function profileModal(existing) {
 
 function parseProfileSubmission(view, user) {
   const v = view.state.values;
+  const csv = (block) => String((v[block] && v[block].v && v[block].v.value) || '').split(',').map((s) => s.trim()).filter(Boolean);
+  const dedupe = (xs) => xs.filter((x, i) => xs.findIndex((y) => y.toLowerCase() === x.toLowerCase()) === i);
   return {
     id: user.id,
     name: user.real_name || user.name,
     department: v.department.v.selected_option.value,
     neighborhood: v.neighborhood.v.selected_option.value,
-    interests: (v.interests.v.selected_options || []).map((o) => o.value),
-    restaurants: String((v.restaurants.v.value) || '').split(',').map((s) => s.trim()).filter(Boolean),
+    interests: dedupe([...(v.interests.v.selected_options || []).map((o) => o.value), ...csv('other_interests')]),
+    teams: dedupe([...((v.teams && v.teams.v.selected_options) || []).map((o) => o.value), ...csv('other_teams')]).slice(0, 4),
+    restaurants: csv('restaurants'),
   };
 }
 
@@ -73,6 +101,7 @@ function directoryBlocks(profiles, me, filter) {
   for (const { p, common } of rows) {
     const info = M.neighborhoodInfo(p.neighborhood);
     const line = `*${p.name}* · ${p.department}\n:round_pushpin: ${p.neighborhood}, ${info.borough} · ${(p.interests || []).join(', ')}` +
+      (p.teams && p.teams.length ? ` · :trophy: ${p.teams.join(', ')}` : '') +
       (p.restaurants && p.restaurants.length ? `\n:fork_and_knife: ${p.restaurants.join(', ')}` : '') +
       (common.count ? `\n_${common.count} in common: ${common.items.join('; ')}_` : '');
     blocks.push({

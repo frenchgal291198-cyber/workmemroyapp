@@ -36,6 +36,21 @@ test('reasons are plain English and tag matching is case-insensitive', () => {
   assert.ok(texts.some((t) => t.startsWith('Shared interests')));
 });
 
+test('shared teams score like restaurants and read as a reason', () => {
+  const a = { ...mk('a', 'Astoria', [], [], 'Sales'), teams: ['Liberty', 'Mets'] };
+  const b = { ...mk('b', 'Harlem', [], [], 'Legal'), teams: ['liberty', 'Knicks'] };
+  const s = M.scorePair(a, b);
+  assert.equal(s.score, M.WEIGHTS.sharedTeam + M.WEIGHTS.crossDepartment);
+  assert.ok(s.reasons.some((r) => r.text === 'You both follow Liberty'));
+  assert.equal(M.commonGround(a, b).count, 1);
+});
+
+test('write-in interests match against the list case-insensitively', () => {
+  const a = mk('a', 'Astoria', ['Dungeons & Dragons'], [], 'Sales');
+  const b = mk('b', 'Harlem', ['dungeons & dragons', 'yoga'], [], 'Legal');
+  assert.equal(M.scorePair(a, b).shared.interests.length, 1);
+});
+
 test('everyone opted in gets matched; even count yields pairs only', () => {
   const people = S.SEED_PROFILES;
   const { pairs, unmatched } = M.runCycle(people);

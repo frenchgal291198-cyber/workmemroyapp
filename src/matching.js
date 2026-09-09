@@ -20,6 +20,7 @@
     nearbyNeighborhood: 6,   // same area cluster (e.g. Park Slope <-> Prospect Heights)
     sameBorough: 3,
     sharedRestaurant: 3,     // per shared restaurant
+    sharedTeam: 3,           // per shared team: a game is a ready-made plan
     sharedInterest: 2,       // per shared interest
     crossDepartment: 1,      // the tool exists to cross silos
     sameDepartment: -2,      // still allowed, just not preferred
@@ -147,6 +148,12 @@
       reasons.push({ type: 'restaurant', text: `You both love ${listify(rest)}` });
     }
 
+    const teams = shared(a.teams, b.teams);
+    if (teams.length) {
+      score += WEIGHTS.sharedTeam * teams.length;
+      reasons.push({ type: 'team', text: `You both follow ${listify(teams)}` });
+    }
+
     const ints = shared(a.interests, b.interests);
     if (ints.length) {
       score += WEIGHTS.sharedInterest * ints.length;
@@ -166,7 +173,7 @@
       reasons.push({ type: 'repeat', text: 'Already matched in an earlier cycle' });
     }
 
-    return { score, reasons, shared: { neighborhood: na && nb && na.name === nb.name, restaurants: rest, interests: ints } };
+    return { score, reasons, shared: { neighborhood: na && nb && na.name === nb.name, restaurants: rest, teams, interests: ints } };
   }
 
   function listify(items) {
@@ -251,6 +258,8 @@
   function suggestion(pair, members) {
     const rest = pair.reasons.find((r) => r.type === 'restaurant');
     if (rest) return 'Idea: grab a table there after work this week.';
+    const team = pair.reasons.find((r) => r.type === 'team');
+    if (team) return 'Idea: catch the next game together, at the arena or a bar near home.';
     const hood = pair.reasons.find((r) => r.type === 'neighborhood' || r.type === 'nearby');
     if (hood) return 'Idea: coffee near home on Saturday, or split the commute in.';
     const interest = pair.reasons.find((r) => r.type === 'interest');
@@ -263,7 +272,7 @@
     if (!me || !other) return { count: 0, items: [] };
     const s = scorePair(me, other, {});
     const items = s.reasons.filter((r) => r.type !== 'department').map((r) => r.text);
-    return { count: (s.shared.neighborhood ? 1 : 0) + s.shared.restaurants.length + s.shared.interests.length, items, score: s.score };
+    return { count: (s.shared.neighborhood ? 1 : 0) + s.shared.restaurants.length + s.shared.teams.length + s.shared.interests.length, items, score: s.score };
   }
 
   return { WEIGHTS, NEIGHBORHOODS, BOROUGHS, neighborhoodInfo, scorePair, runCycle, introMessage, commonGround, pairKey, historyKeys, listify };

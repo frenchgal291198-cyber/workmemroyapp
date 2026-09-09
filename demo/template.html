@@ -86,6 +86,13 @@
   /* Chips / pills */
   .tag { display: inline-flex; align-items: center; gap: 5px; background: var(--surface-2); color: var(--ink-2); border-radius: 999px; padding: 2px 9px; font-size: 12.5px; line-height: 1.5; }
   .tag.hit { background: var(--accent-soft); color: var(--accent-deep); font-weight: 600; }
+  .tag.team { background: transparent; border: 1px solid var(--line-strong); color: var(--ink-2); }
+  .tag.team.hit { border-color: var(--accent); background: var(--accent-soft); color: var(--accent-deep); }
+  .chips button.team { border-style: dashed; }
+  .chips button.team[aria-pressed="true"] { border-style: solid; }
+  .chips button .x { opacity: .55; margin-left: 4px; font-weight: 400; }
+  .writein { display: flex; gap: 8px; margin-top: 4px; }
+  .writein input[type=text] { max-width: 260px; }
   .bullet { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: 50%; color: #fff; font-family: var(--display); font-weight: 800; font-size: 9.5px; letter-spacing: 0; flex: none; }
   .hood { display: inline-flex; align-items: center; gap: 7px; font-weight: 600; }
   .hood .b { color: var(--ink-3); font-weight: 400; }
@@ -260,10 +267,10 @@
 (function () {
   'use strict';
   const { NEIGHBORHOODS, BOROUGHS, neighborhoodInfo, runCycle, introMessage, commonGround, scorePair, listify } = KYN;
-  const { DEPARTMENTS, INTERESTS, ELIGIBLE_HEADCOUNT, SEED_PROFILES } = KYN;
+  const { DEPARTMENTS, INTERESTS, TEAMS, ELIGIBLE_HEADCOUNT, SEED_PROFILES } = KYN;
   const { PILOT_DAYS, PHASES, phaseForDay, weekForDay, cycleDay, nextCycle, compute } = KYN;
 
-  const STORAGE_KEY = 'kyn-proto-v1';
+  const STORAGE_KEY = 'kyn-proto-v2';
   const START_DAY = 38; // a Wednesday in Week 6: two cycles run, third due in five days
   const BOROUGH_VAR = { Brooklyn: 'var(--bk)', Queens: 'var(--qn)', Manhattan: 'var(--mn)', Bronx: 'var(--bx)', 'Staten Island': 'var(--si)', 'New Jersey': 'var(--nj)', Other: 'var(--other)' };
   const BOROUGH_CODE = { Brooklyn: 'BK', Queens: 'QN', Manhattan: 'MN', Bronx: 'BX', 'Staten Island': 'SI', 'New Jersey': 'NJ', Other: '·' };
@@ -302,13 +309,14 @@
     return {
       today: START_DAY,
       view: 'profile',
-      me: { id: 'me', name: 'Claire', department: 'Guest Experience', title: 'Experience Strategy', neighborhood: 'Fort Greene', interests: ['live music', 'ceramics', 'running'], restaurants: ['Olmsted', 'Miss Ada'], optedIn: false },
+      me: { id: 'me', name: 'Claire', department: 'Guest Experience', title: 'Experience Strategy', neighborhood: 'Fort Greene', interests: ['live music', 'ceramics', 'running'], restaurants: ['Olmsted', 'Miss Ada'], teams: ['Liberty', 'Nets'], optedIn: false },
       profiles: h.profiles, events: h.events, cycles: h.cycles,
       dir: { q: '', borough: 'All' },
     };
   }
 
   let state = load() || defaultState();
+  if (!state.me.teams) state.me.teams = [];
   function load() { try { const s = localStorage.getItem(STORAGE_KEY); return s ? JSON.parse(s) : null; } catch (e) { return null; } }
   function save() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) { /* private mode etc. */ } }
 
@@ -319,6 +327,19 @@
   const pct = (x) => Math.round(x * 100) + '%';
   const bullet = (hood) => { const b = neighborhoodInfo(hood).borough; return `<span class="bullet" style="background:${BOROUGH_VAR[b] || BOROUGH_VAR.Other}" title="${esc(b)}">${BOROUGH_CODE[b] || '·'}</span>`; };
   const hoodTag = (hood) => `<span class="hood">${bullet(hood)}${esc(hood)}<span class="b">· ${esc(neighborhoodInfo(hood).borough)}</span></span>`;
+  const INTEREST_CAP = 5, TEAM_CAP = 4;
+  function tagRow(p, hitI, hitT) {
+    const ints = (p.interests || []).map((i) => `<span class="tag ${hitI && hitI.has(i.toLowerCase()) ? 'hit' : ''}">${esc(i)}</span>`);
+    const teams = (p.teams || []).map((t) => `<span class="tag team ${hitT && hitT.has(t.toLowerCase()) ? 'hit' : ''}">${esc(t)}</span>`);
+    return `<div class="chips" style="gap:4px">${ints.join('')}${teams.join('')}</div>`;
+  }
+  function chipPicker(kind, list, chosen, cap) {
+    const custom = chosen.filter((c) => !list.some((l) => l.toLowerCase() === c.toLowerCase()));
+    const full = chosen.length >= cap;
+    const btn = (v, isCustom) => { const on = chosen.some((c) => c.toLowerCase() === v.toLowerCase()); return `<button type="button" class="${kind === 'team' ? 'team' : ''}" data-${kind}="${esc(v)}" aria-pressed="${on}" ${!on && full ? 'disabled' : ''}>${esc(v)}${isCustom ? '<span class="x" aria-hidden="true">×</span>' : ''}</button>`; };
+    return `<div class="chips">${list.map((v) => btn(v, false)).join('')}${custom.map((v) => btn(v, true)).join('')}</div>
+      <div class="writein"><input type="text" id="add-${kind}" placeholder="${kind === 'team' ? 'Another team, any sport or college' : 'Something not listed'}" aria-label="Add your own ${kind}" ${full ? 'disabled' : ''}><button type="button" class="btn sm" data-add="${kind}" ${full ? 'disabled' : ''}>Add</button></div>`;
+  }
   function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('show'), 2200); }
   function everyone() { return state.me.optedIn ? [state.me, ...state.profiles] : state.profiles; }
   function byId() { return Object.fromEntries([state.me, ...state.profiles].map((p) => [p.id, p])); }
@@ -349,7 +370,7 @@
   function renderProfile() {
     const me = state.me;
     const groups = BOROUGHS.map((b) => `<optgroup label="${esc(b)}">${NEIGHBORHOODS.filter((n) => n.borough === b).map((n) => `<option ${n.name === me.neighborhood ? 'selected' : ''}>${esc(n.name)}</option>`).join('')}</optgroup>`).join('');
-    const full = me.interests.length >= 5;
+    const teams = me.teams || [];
     $('#profileForm').innerHTML = `
       <div class="status ${me.optedIn ? '' : 'off'}"><span class="dot"></span>${me.optedIn ? `You're in the pilot as ${esc(me.neighborhood)}. Next cycle includes you.` : 'Not opted in yet. Example answers are filled in; make them yours.'}</div>
       <div class="field"><label for="fName">Name</label><input type="text" id="fName" name="name" value="${esc(me.name)}" required></div>
@@ -358,8 +379,12 @@
         <div class="field" style="flex:1"><label for="fTitle">Title <span class="muted" style="font-weight:400">(optional)</span></label><input type="text" id="fTitle" name="title" value="${esc(me.title || '')}"></div>
       </div>
       <div class="field"><label for="fHood">Home neighborhood</label><select id="fHood" name="neighborhood">${groups}</select><span class="hint">Weighted highest. Nearby neighborhoods (Park Slope ↔ Prospect Heights) count too.</span></div>
-      <div class="field"><label>Interests &amp; hobbies <span class="muted" style="font-weight:400">· ${me.interests.length} of 5</span></label>
-        <div class="chips" id="interestChips">${INTERESTS.map((i) => { const on = me.interests.includes(i); return `<button type="button" data-interest="${esc(i)}" aria-pressed="${on}" ${!on && full ? 'disabled' : ''}>${esc(i)}</button>`; }).join('')}</div></div>
+      <div class="field"><label>Interests &amp; hobbies <span class="muted" style="font-weight:400">· ${me.interests.length} of ${INTEREST_CAP}</span></label>
+        ${chipPicker('interest', INTERESTS, me.interests, INTEREST_CAP)}
+        <span class="hint">Pick from the list or write in your own. Write-ins match other people's write-ins, so spell it the obvious way.</span></div>
+      <div class="field"><label>Teams you follow <span class="muted" style="font-weight:400">· ${teams.length} of ${TEAM_CAP}</span></label>
+        ${chipPicker('team', TEAMS, teams, TEAM_CAP)}
+        <span class="hint">Any sport, any level. A shared team scores like a shared restaurant: the next game is a ready-made plan.</span></div>
       <div class="field"><label for="fRest">Favorite restaurants</label><input type="text" id="fRest" name="restaurants" value="${esc(me.restaurants.join(', '))}" placeholder="Comma-separated"><span class="hint">A shared favorite is the easiest first plan, so it scores above a generic hobby.</span></div>
       <div class="row">
         <button type="submit" class="btn primary">${me.optedIn ? 'Save changes' : 'Save & opt in'}</button>
@@ -375,7 +400,7 @@
         <div class="card me" style="padding:0;border:0;background:transparent">
           <div class="who"><div class="avatar" style="background:${BOROUGH_VAR[neighborhoodInfo(draft.neighborhood).borough]}">${esc(initials(draft.name || 'You'))}</div><div><div class="name">${esc(draft.name || 'You')}</div><div class="role">${esc(draft.title ? draft.title + ' · ' : '')}${esc(draft.department)}</div></div></div>
           ${hoodTag(draft.neighborhood)}
-          <div class="chips" style="gap:4px">${draft.interests.map((i) => `<span class="tag">${esc(i)}</span>`).join('')}</div>
+          ${tagRow(draft)}
           ${draft.restaurants.length ? `<div class="small muted">Loves ${esc(listify(draft.restaurants))}</div>` : ''}
         </div>
       </div>
@@ -416,10 +441,11 @@
       const s = isMe ? null : scorePair(me, p, {});
       const hitI = new Set(s ? s.shared.interests.map((x) => x.toLowerCase()) : []);
       const hitR = new Set(s ? s.shared.restaurants.map((x) => x.toLowerCase()) : []);
+      const hitT = new Set(s ? s.shared.teams.map((x) => x.toLowerCase()) : []);
       return `<article class="card ${isMe ? 'me' : ''}">
         <div class="who"><div class="avatar" style="background:${BOROUGH_VAR[neighborhoodInfo(p.neighborhood).borough]}">${esc(initials(p.name))}</div><div><div class="name">${esc(p.name)}${isMe ? ' <span class="muted small">(you)</span>' : ''}</div><div class="role">${esc(p.title ? p.title + ' · ' : '')}${esc(p.department)}</div></div></div>
         ${hoodTag(p.neighborhood)}
-        <div class="chips" style="gap:4px">${(p.interests || []).map((i) => `<span class="tag ${hitI.has(i.toLowerCase()) ? 'hit' : ''}">${esc(i)}</span>`).join('')}</div>
+        ${tagRow(p, hitI, hitT)}
         ${(p.restaurants || []).length ? `<div class="small muted">Loves ${(p.restaurants || []).map((r) => hitR.has(r.toLowerCase()) ? `<b style="color:var(--accent-deep)">${esc(r)}</b>` : esc(r)).join(', ')}</div>` : ''}
         ${isMe ? '' : `<div class="common ${c.count ? '' : 'none'}">${c.count ? `${c.count} in common · ${esc(c.items.join(' · '))}` : 'Nothing in common yet'}</div>
         <div class="foot"><span class="small muted">${esc(neighborhoodInfo(p.neighborhood).area)}</span><button type="button" class="btn sm" data-sayhi="${esc(p.id)}">Say hi</button></div>`}
@@ -435,7 +461,7 @@
     $('#cycleBar').innerHTML = `
       <div>
         <div style="font-family:var(--display);font-weight:700">${next ? `Cycle ${next.n} runs on Day ${next.day} (Week ${weekForDay(next.day)})` : 'Four cycles done. The Run phase is complete.'}</div>
-        <div class="weights"><span>Same neighborhood <b>+${W.sameNeighborhood}</b></span><span>Nearby <b>+${W.nearbyNeighborhood}</b></span><span>Same borough <b>+${W.sameBorough}</b></span><span>Shared restaurant <b>+${W.sharedRestaurant} each</b></span><span>Shared interest <b>+${W.sharedInterest} each</b></span><span>Different teams <b>+${W.crossDepartment}</b></span><span>Repeat pair <b>never</b></span></div>
+        <div class="weights"><span>Same neighborhood <b>+${W.sameNeighborhood}</b></span><span>Nearby <b>+${W.nearbyNeighborhood}</b></span><span>Same borough <b>+${W.sameBorough}</b></span><span>Shared restaurant <b>+${W.sharedRestaurant} each</b></span><span>Shared team <b>+${W.sharedTeam} each</b></span><span>Shared interest <b>+${W.sharedInterest} each</b></span><span>Different teams <b>+${W.crossDepartment}</b></span><span>Repeat pair <b>never</b></span></div>
       </div>
       <button type="button" class="btn primary" id="runCycleBtn" ${next ? '' : 'disabled'}>${next ? `Fast-forward to Day ${next.day} and run cycle ${next.n}` : 'No cycles left'}</button>`;
     const ids = byId();
@@ -528,12 +554,11 @@
     if (!t) return;
     if (t.dataset.view) return setView(t.dataset.view);
     if (t.id === 'resetBtn') { state = defaultState(); render(); toast('Demo reset to Day 38'); return; }
-    if (t.dataset.interest) {
-      const draft = readForm();
-      const i = t.dataset.interest;
-      draft.interests = draft.interests.includes(i) ? draft.interests.filter((x) => x !== i) : [...draft.interests, i].slice(0, 5);
-      state.me = draft; render(); return;
+    if (t.dataset.interest || t.dataset.team) {
+      const kind = t.dataset.interest ? 'interest' : 'team';
+      toggleChoice(kind, t.dataset[kind]); return;
     }
+    if (t.dataset.add) { addWriteIn(t.dataset.add); return; }
     if (t.id === 'leaveBtn') { state.me = { ...readForm(), optedIn: false }; state.events.push({ type: 'opt_out', day: state.today, userId: 'me' }); render(); toast('You left the pilot. Profile hidden.'); return; }
     if (t.dataset.borough) { state.dir.borough = t.dataset.borough; render(); return; }
     if (t.dataset.sayhi) { const p = byId()[t.dataset.sayhi]; toast(`In Slack this opens a DM with ${p.name.split(' ')[0]}`); return; }
@@ -542,6 +567,34 @@
     if (t.id === 'runCycleBtn') return runNextCycle();
   });
 
+  function toggleChoice(kind, value) {
+    const key = kind === 'team' ? 'teams' : 'interests';
+    const cap = kind === 'team' ? TEAM_CAP : INTEREST_CAP;
+    const draft = readForm();
+    const list = draft[key] || [];
+    const has = list.some((x) => x.toLowerCase() === value.toLowerCase());
+    draft[key] = has ? list.filter((x) => x.toLowerCase() !== value.toLowerCase()) : [...list, value].slice(0, cap);
+    state.me = draft; render();
+  }
+  function addWriteIn(kind) {
+    const input = $('#add-' + kind);
+    const value = (input.value || '').trim().replace(/\s+/g, ' ');
+    if (!value) { input.focus(); return; }
+    const key = kind === 'team' ? 'teams' : 'interests';
+    const cap = kind === 'team' ? TEAM_CAP : INTEREST_CAP;
+    const draft = readForm();
+    const list = draft[key] || [];
+    if (list.some((x) => x.toLowerCase() === value.toLowerCase())) { toast(`${value} is already on your list`); input.value = ''; return; }
+    if (list.length >= cap) { toast(`Up to ${cap} ${key}. Remove one first.`); return; }
+    draft[key] = [...list, value];
+    state.me = draft; render();
+    toast(`Added ${value}`);
+    const next = $('#add-' + kind); if (next) next.focus();
+  }
+  $('#profileForm').addEventListener('keydown', (ev) => {
+    if (ev.key !== 'Enter') return;
+    if (ev.target.id === 'add-interest' || ev.target.id === 'add-team') { ev.preventDefault(); addWriteIn(ev.target.id.replace('add-', '')); }
+  });
   $('#profileForm').addEventListener('submit', (ev) => {
     ev.preventDefault();
     const was = state.me.optedIn;
@@ -550,7 +603,7 @@
     render();
     toast(was ? 'Profile saved' : `You're in. Next cycle includes you.`);
   });
-  $('#profileForm').addEventListener('change', (ev) => { if (ev.target.matches('select, input')) { const opted = state.me.optedIn; state.me = { ...readForm(), optedIn: opted }; renderProfile(); save(); } });
+  $('#profileForm').addEventListener('change', (ev) => { if (ev.target.matches('select, input') && !ev.target.id.startsWith('add-')) { const opted = state.me.optedIn; state.me = { ...readForm(), optedIn: opted }; renderProfile(); save(); } });
   $('#dirSearch').addEventListener('input', (ev) => { state.dir.q = ev.target.value; renderDirectory(); save(); });
 
   function runNextCycle() {

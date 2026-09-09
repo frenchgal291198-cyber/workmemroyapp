@@ -6,7 +6,7 @@ An opt-in Slack tool that connects BKSE corporate colleagues by home neighborhoo
 
 | Part | Where | Status |
 | --- | --- | --- |
-| Matching engine (neighborhood → nearby → borough → restaurants → interests, never repeats a pair, odd counts form one trio) | `src/matching.js` | Real, tested |
+| Matching engine (neighborhood → nearby → borough → restaurants and teams → interests, never repeats a pair, odd counts form one trio) | `src/matching.js` | Real, tested |
 | Pilot metrics (opt-in rate, directory usage, match acknowledgment) from an event log | `src/metrics.js` | Real, tested |
 | Slack app: `/neighbors` slash command, profile modal, directory, match DMs with a "We met" button, App Home dashboard | `src/slack/` | Scaffolded, needs a Slack workspace to run |
 | Clickable web demo that stands in for the Slack UI | `demo/template.html` → `dist/index.html` | Ready to show |
@@ -46,7 +46,7 @@ KYN_ELIGIBLE_HEADCOUNT=140      # for the opt-in rate
 
 Commands inside Slack:
 
-- `/neighbors profile` joins the pilot or edits your neighborhood and interests
+- `/neighbors profile` joins the pilot or edits your neighborhood, interests (from the list or written in), and teams
 - `/neighbors directory [neighborhood | interest | department]` browses who's near you
 - `/neighbors leave` opts out and hides your profile immediately
 - `/neighbors cycle` runs a match cycle (admins only)
@@ -61,6 +61,7 @@ Each pair gets a score; the cycle pairs everyone greedily from the best score do
 | Nearby neighborhood (same area, e.g. Park Slope and Prospect Heights) | +6 |
 | Same borough | +3 |
 | Each shared favorite restaurant | +3 |
+| Each shared team (any sport, any level) | +3 |
 | Each shared interest | +2 |
 | Different departments | +1 |
 | Same department | −2 |
