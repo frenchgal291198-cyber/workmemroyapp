@@ -1,0 +1,574 @@
+<title>Know Your Neighbors</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=Source+Sans+3:ital,wght@0,400;0,600;1,400&display=swap">
+<style>
+  :root {
+    --bg: #F4F5F7; --surface: #FFFFFF; --surface-2: #EBEDF1; --surface-3: #E1E4EA;
+    --ink: #171B24; --ink-2: #4B5260; --ink-3: #7A8291; --line: #D9DCE3; --line-strong: #B9BEC9;
+    --accent: #1B7F5A; --accent-ink: #FFFFFF; --accent-soft: #DFF1E8; --accent-deep: #145F44;
+    --warn: #B45309; --warn-soft: #FDEBD2; --good: #1B7F5A; --bad: #B91C1C;
+    --bk: #2F6DE1; --qn: #D0561B; --mn: #7C3AED; --bx: #C62828; --si: #0E7490; --nj: #5B8C1A; --other: #6B7280;
+    --shadow: 0 1px 2px rgba(23,27,36,.06), 0 8px 24px -12px rgba(23,27,36,.18);
+    --radius: 10px;
+    --display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+    --body: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #121419; --surface: #1B1E25; --surface-2: #23272F; --surface-3: #2C313B;
+      --ink: #ECEEF2; --ink-2: #B3B9C5; --ink-3: #828A98; --line: #2E333D; --line-strong: #444B57;
+      --accent: #3FB984; --accent-ink: #0E1A14; --accent-soft: #173B2D; --accent-deep: #6ED3A4;
+      --warn: #F0A24A; --warn-soft: #3A2A12; --good: #3FB984; --bad: #F07171;
+      --bk: #6A9BF2; --qn: #F0844A; --mn: #A78BFA; --bx: #F26B6B; --si: #38B2D0; --nj: #9BCF4A; --other: #9AA3B2;
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.6);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #121419; --surface: #1B1E25; --surface-2: #23272F; --surface-3: #2C313B;
+    --ink: #ECEEF2; --ink-2: #B3B9C5; --ink-3: #828A98; --line: #2E333D; --line-strong: #444B57;
+    --accent: #3FB984; --accent-ink: #0E1A14; --accent-soft: #173B2D; --accent-deep: #6ED3A4;
+    --warn: #F0A24A; --warn-soft: #3A2A12; --good: #3FB984; --bad: #F07171;
+    --bk: #6A9BF2; --qn: #F0844A; --mn: #A78BFA; --bx: #F26B6B; --si: #38B2D0; --nj: #9BCF4A; --other: #9AA3B2;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.6);
+  }
+
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.45; }
+  h1, h2, h3, h4 { font-family: var(--display); margin: 0; text-wrap: balance; letter-spacing: -0.01em; }
+  h1 { font-size: 26px; font-weight: 800; }
+  h2 { font-size: 19px; font-weight: 700; }
+  h3 { font-size: 15px; font-weight: 700; }
+  p { margin: 0; }
+  a { color: var(--accent-deep); }
+  button { font: inherit; cursor: pointer; }
+  button:focus-visible, input:focus-visible, select:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .num { font-family: var(--display); font-variant-numeric: tabular-nums; }
+  .eyebrow { font-family: var(--display); font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
+  .muted { color: var(--ink-2); }
+  .small { font-size: 13px; }
+
+  .app { display: grid; grid-template-columns: 248px 1fr; min-height: 100vh; }
+  .rail { background: var(--surface); border-right: 1px solid var(--line); padding: 22px 18px; display: flex; flex-direction: column; gap: 22px; position: sticky; top: 0; height: 100vh; }
+  .brand { display: flex; flex-direction: column; gap: 6px; }
+  .brand h1 { font-size: 20px; line-height: 1.1; }
+  .brand .eyebrow { color: var(--accent-deep); }
+  .pilot-chip { background: var(--surface-2); border-radius: var(--radius); padding: 12px 14px; display: grid; gap: 4px; }
+  .pilot-chip .day { font-family: var(--display); font-weight: 800; font-size: 22px; line-height: 1; }
+  .pilot-chip .day span { font-size: 13px; font-weight: 600; color: var(--ink-3); }
+  .pilot-bar { height: 6px; background: var(--surface-3); border-radius: 3px; overflow: hidden; margin-top: 6px; display: flex; }
+  .pilot-bar i { display: block; height: 100%; }
+  nav { display: grid; gap: 4px; }
+  nav button { display: flex; align-items: center; justify-content: space-between; width: 100%; text-align: left; border: 0; background: transparent; color: var(--ink-2); padding: 10px 12px; border-radius: 8px; font-family: var(--display); font-weight: 600; font-size: 14px; }
+  nav button:hover { background: var(--surface-2); color: var(--ink); }
+  nav button[aria-current="page"] { background: var(--accent-soft); color: var(--accent-deep); }
+  nav button .count { font-size: 12px; font-weight: 600; color: var(--ink-3); background: var(--surface-2); padding: 1px 7px; border-radius: 999px; }
+  nav button[aria-current="page"] .count { background: var(--surface); }
+  .rail-foot { margin-top: auto; display: grid; gap: 10px; font-size: 12.5px; color: var(--ink-3); }
+  .rail-foot button { border: 1px solid var(--line); background: transparent; color: var(--ink-2); border-radius: 6px; padding: 6px 10px; font-size: 12.5px; }
+  .rail-foot button:hover { background: var(--surface-2); }
+
+  main { padding: 28px 36px 60px; max-width: 1180px; width: 100%; }
+  .view { display: none; }
+  .view.active { display: block; }
+  .view-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; margin-bottom: 22px; }
+  .view-head p { max-width: 62ch; color: var(--ink-2); margin-top: 6px; }
+
+  /* Buttons */
+  .btn { display: inline-flex; align-items: center; gap: 8px; border-radius: 8px; padding: 9px 14px; font-family: var(--display); font-weight: 600; font-size: 14px; border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink); }
+  .btn:hover { background: var(--surface-2); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .btn.primary:hover { filter: brightness(1.05); }
+  .btn.ghost { border-color: transparent; background: transparent; color: var(--ink-2); }
+  .btn.ghost:hover { background: var(--surface-2); }
+  .btn:disabled { opacity: .5; cursor: not-allowed; }
+  .btn.sm { padding: 6px 10px; font-size: 13px; }
+
+  /* Chips / pills */
+  .tag { display: inline-flex; align-items: center; gap: 5px; background: var(--surface-2); color: var(--ink-2); border-radius: 999px; padding: 2px 9px; font-size: 12.5px; line-height: 1.5; }
+  .tag.hit { background: var(--accent-soft); color: var(--accent-deep); font-weight: 600; }
+  .bullet { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: 50%; color: #fff; font-family: var(--display); font-weight: 800; font-size: 9.5px; letter-spacing: 0; flex: none; }
+  .hood { display: inline-flex; align-items: center; gap: 7px; font-weight: 600; }
+  .hood .b { color: var(--ink-3); font-weight: 400; }
+
+  /* Forms */
+  .field { display: grid; gap: 6px; }
+  .field label { font-family: var(--display); font-weight: 600; font-size: 13px; }
+  .field .hint { font-size: 12.5px; color: var(--ink-3); }
+  input[type=text], select { width: 100%; border: 1px solid var(--line-strong); border-radius: 8px; background: var(--surface); color: var(--ink); padding: 9px 11px; font: inherit; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chips button { border: 1px solid var(--line); background: var(--surface); color: var(--ink-2); border-radius: 999px; padding: 4px 11px; font-size: 13px; }
+  .chips button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent-deep); font-weight: 600; }
+  .chips button:disabled { opacity: .45; cursor: not-allowed; }
+
+  /* Layout blocks */
+  .two-col { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(280px, .9fr); gap: 24px; align-items: start; }
+  .panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px; display: grid; gap: 16px; }
+  .panel.flat { background: transparent; border-color: transparent; padding: 0; }
+  .stack { display: grid; gap: 14px; }
+  .panel, .phase, .tile, .card, .decision, .pilot-chip { align-content: start; }
+  .row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .status { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 8px; background: var(--accent-soft); color: var(--accent-deep); font-weight: 600; }
+  .status.off { background: var(--surface-2); color: var(--ink-2); }
+  .status .dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+
+  /* Directory */
+  .toolbar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 18px; }
+  .toolbar input[type=text] { max-width: 320px; }
+  .filters { display: flex; gap: 6px; flex-wrap: wrap; }
+  .filters button { border: 1px solid var(--line); background: var(--surface); color: var(--ink-2); border-radius: 999px; padding: 4px 11px; font-size: 13px; display: inline-flex; gap: 6px; align-items: center; }
+  .filters button[aria-pressed="true"] { border-color: var(--ink); color: var(--ink); font-weight: 600; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; display: grid; gap: 10px; }
+  .card.me { border-color: var(--accent); background: var(--accent-soft); }
+  .card .who { display: flex; gap: 12px; align-items: center; }
+  .avatar { width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center; color: #fff; font-family: var(--display); font-weight: 700; font-size: 14px; flex: none; }
+  .card .name { font-family: var(--display); font-weight: 700; font-size: 15px; }
+  .card .role { font-size: 13px; color: var(--ink-3); }
+  .card .common { font-size: 13px; color: var(--accent-deep); font-weight: 600; border-top: 1px dashed var(--line); padding-top: 8px; }
+  .card .common.none { color: var(--ink-3); font-weight: 400; }
+  .card .foot { display: flex; justify-content: space-between; align-items: center; }
+  .empty { padding: 40px; text-align: center; color: var(--ink-3); border: 1px dashed var(--line-strong); border-radius: var(--radius); }
+
+  /* Matches (Slack DM preview) */
+  .cycle-bar { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 18px; border-radius: var(--radius); background: var(--surface); border: 1px solid var(--line); margin-bottom: 18px; flex-wrap: wrap; }
+  .weights { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13px; color: var(--ink-2); }
+  .weights b { font-family: var(--display); color: var(--ink); }
+  .dm-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 14px; }
+  .dm { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+  .dm .members { display: flex; align-items: center; gap: 8px; padding: 10px 14px; background: var(--surface-2); font-size: 13px; font-weight: 600; flex-wrap: wrap; }
+  .dm .members .sep { color: var(--ink-3); font-weight: 400; }
+  .dm .members .score { margin-left: auto; color: var(--ink-3); font-weight: 600; }
+  .dm .msg { display: grid; grid-template-columns: 36px 1fr; gap: 10px; padding: 14px; }
+  .bot { width: 36px; height: 36px; border-radius: 8px; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; font-family: var(--display); font-weight: 800; font-size: 12px; }
+  .dm .from { font-weight: 700; font-family: var(--display); font-size: 14px; display: flex; gap: 8px; align-items: baseline; }
+  .dm .from .app-tag { font-size: 10px; background: var(--surface-3); color: var(--ink-2); padding: 0 5px; border-radius: 3px; font-family: var(--body); font-weight: 600; }
+  .dm .from time { font-size: 12px; color: var(--ink-3); font-weight: 400; font-family: var(--body); }
+  .dm .text { white-space: pre-line; margin-top: 4px; }
+  .dm .actions { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+  .dm .acked { display: inline-flex; align-items: center; gap: 6px; color: var(--good); font-weight: 600; font-size: 13px; }
+  .dm.is-acked { border-color: var(--good); }
+  details.cycle { border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
+  details.cycle summary { cursor: pointer; padding: 12px 16px; font-family: var(--display); font-weight: 600; display: flex; gap: 12px; align-items: center; list-style: none; }
+  details.cycle summary::-webkit-details-marker { display: none; }
+  details.cycle summary .meta { color: var(--ink-3); font-weight: 400; font-family: var(--body); font-size: 13px; }
+  details.cycle summary::before { content: ""; width: 7px; height: 7px; border-right: 2px solid var(--ink-3); border-bottom: 2px solid var(--ink-3); transform: rotate(-45deg); transition: transform .15s; }
+  details.cycle[open] summary::before { transform: rotate(45deg); }
+  details.cycle .dm-list { padding: 0 16px 16px; }
+
+  /* Pilot */
+  .tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 22px; }
+  .tile { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 18px; display: grid; gap: 6px; }
+  .tile .big { font-family: var(--display); font-weight: 800; font-size: 30px; line-height: 1; font-variant-numeric: tabular-nums; }
+  .tile .big span { font-size: 14px; font-weight: 600; color: var(--ink-3); margin-left: 4px; }
+  .tile .sub { font-size: 13px; color: var(--ink-2); }
+  .tile svg { width: 100%; height: 38px; display: block; margin-top: 4px; }
+  .timeline { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px 20px; display: grid; gap: 12px; margin-bottom: 22px; }
+  .phases { position: relative; display: grid; grid-template-columns: 14fr 56fr 20fr; gap: 3px; }
+  .phase { padding: 10px 12px; border-radius: 6px; background: var(--surface-2); display: grid; gap: 2px; min-width: 0; }
+  .phase.current { background: var(--accent-soft); outline: 1px solid var(--accent); }
+  .phase .eyebrow { color: inherit; opacity: .7; }
+  .phase b { font-family: var(--display); font-size: 14px; }
+  .phase .small { color: var(--ink-2); }
+  .today-marker { position: absolute; top: -8px; bottom: -8px; width: 2px; background: var(--ink); }
+  .today-marker::after { content: attr(data-label); position: absolute; top: -18px; left: 50%; transform: translateX(-50%); font-family: var(--display); font-size: 11px; font-weight: 700; white-space: nowrap; background: var(--ink); color: var(--bg); padding: 1px 6px; border-radius: 3px; }
+  .cycle-dots { display: flex; gap: 6px; font-size: 12.5px; color: var(--ink-3); flex-wrap: wrap; }
+  .cycle-dots span { display: inline-flex; align-items: center; gap: 5px; }
+  .cycle-dots i { width: 8px; height: 8px; border-radius: 50%; background: var(--line-strong); }
+  .cycle-dots i.done { background: var(--accent); }
+  .bars { display: grid; gap: 8px; }
+  .bar { display: grid; grid-template-columns: 150px 1fr 48px; align-items: center; gap: 10px; font-size: 13px; }
+  .bar .track { height: 10px; background: var(--surface-2); border-radius: 5px; overflow: hidden; }
+  .bar .fill { height: 100%; background: var(--accent); border-radius: 5px; }
+  .bar .n { text-align: right; color: var(--ink-2); font-variant-numeric: tabular-nums; font-family: var(--display); font-weight: 600; }
+  .decision { border-left: 3px solid var(--warn); background: var(--warn-soft); padding: 14px 16px; border-radius: 0 var(--radius) var(--radius) 0; display: grid; gap: 6px; }
+  .decision b { font-family: var(--display); }
+  .three { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+
+  .toast { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 8px; font-family: var(--display); font-weight: 600; font-size: 14px; box-shadow: var(--shadow); opacity: 0; transition: opacity .2s; pointer-events: none; }
+  .toast.show { opacity: 1; }
+
+  @media (max-width: 900px) {
+    .app { grid-template-columns: 1fr; }
+    .rail { position: static; height: auto; border-right: 0; border-bottom: 1px solid var(--line); }
+    nav { grid-template-columns: repeat(4, 1fr); }
+    main { padding: 20px 16px 40px; }
+    .two-col, .tiles, .three { grid-template-columns: 1fr; }
+    .dm-list { grid-template-columns: 1fr; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="app">
+  <aside class="rail">
+    <div class="brand">
+      <span class="eyebrow">BKSE People &amp; Culture · Pilot</span>
+      <h1>Know Your Neighbors</h1>
+      <p class="small muted">Colleagues matched by neighborhood first, shared interests second.</p>
+    </div>
+    <div class="pilot-chip" id="pilotChip"></div>
+    <nav id="nav" aria-label="Sections"></nav>
+    <div class="rail-foot">
+      <p>Web stand-in for the Slack app. Every person here is fictional; the matching and metrics are the real code.</p>
+      <button type="button" id="resetBtn">Reset demo data</button>
+    </div>
+  </aside>
+
+  <main>
+    <section class="view" id="view-profile" aria-labelledby="h-profile">
+      <div class="view-head">
+        <div><h2 id="h-profile">Your neighbor profile</h2><p>The whole ask of a participant. About a minute, in a Slack modal. Nothing here is visible to anyone who hasn't opted in themselves.</p></div>
+      </div>
+      <div class="two-col">
+        <form class="panel" id="profileForm" autocomplete="off"></form>
+        <div class="stack" id="profileSide"></div>
+      </div>
+    </section>
+
+    <section class="view" id="view-directory" aria-labelledby="h-directory">
+      <div class="view-head">
+        <div><h2 id="h-directory">Directory</h2><p>Browse by borough, neighborhood, or hobby. Sorted by how much each person has in common with you. In Slack this is <code>/neighbors directory</code>.</p></div>
+      </div>
+      <div class="toolbar">
+        <input type="text" id="dirSearch" placeholder="Search neighborhood, hobby, or team" aria-label="Search directory">
+        <div class="filters" id="boroughFilters"></div>
+      </div>
+      <div class="grid" id="dirGrid"></div>
+    </section>
+
+    <section class="view" id="view-matches" aria-labelledby="h-matches">
+      <div class="view-head">
+        <div><h2 id="h-matches">Match cycles</h2><p>Every two weeks the bot pairs everyone opted in and opens a group DM. Admin view: every intro from the latest cycle, with the one button we track.</p></div>
+      </div>
+      <div class="cycle-bar" id="cycleBar"></div>
+      <div class="stack" id="cycleList"></div>
+    </section>
+
+    <section class="view" id="view-pilot" aria-labelledby="h-pilot">
+      <div class="view-head">
+        <div><h2 id="h-pilot">Pilot dashboard</h2><p>The three numbers the proposal commits to, plus the calendar. This is what HR sees at the Week 12 review.</p></div>
+      </div>
+      <div class="tiles" id="tiles"></div>
+      <div class="timeline" id="timeline"></div>
+      <div class="three" id="pilotPanels"></div>
+    </section>
+  </main>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>/*__KYN_ENGINE__*/</script>
+<script>
+(function () {
+  'use strict';
+  const { NEIGHBORHOODS, BOROUGHS, neighborhoodInfo, runCycle, introMessage, commonGround, scorePair, listify } = KYN;
+  const { DEPARTMENTS, INTERESTS, ELIGIBLE_HEADCOUNT, SEED_PROFILES } = KYN;
+  const { PILOT_DAYS, PHASES, phaseForDay, weekForDay, cycleDay, nextCycle, compute } = KYN;
+
+  const STORAGE_KEY = 'kyn-proto-v1';
+  const START_DAY = 38; // a Wednesday in Week 6: two cycles run, third due in five days
+  const BOROUGH_VAR = { Brooklyn: 'var(--bk)', Queens: 'var(--qn)', Manhattan: 'var(--mn)', Bronx: 'var(--bx)', 'Staten Island': 'var(--si)', 'New Jersey': 'var(--nj)', Other: 'var(--other)' };
+  const BOROUGH_CODE = { Brooklyn: 'BK', Queens: 'QN', Manhattan: 'MN', Bronx: 'BX', 'Staten Island': 'SI', 'New Jersey': 'NJ', Other: '·' };
+
+  // ----- deterministic pseudo-random for seeded history -----
+  function rng(seed) { let a = seed >>> 0; return () => { a += 0x6D2B79F5; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+
+  function seedHistory() {
+    const r = rng(2026);
+    const events = [];
+    const profiles = SEED_PROFILES.map((p) => ({ ...p }));
+    profiles.forEach((p, i) => events.push({ type: 'opt_in', day: 1 + Math.floor(i * 13 / profiles.length), userId: p.id }));
+    // directory views: busy at launch, steady through the run phase, bumps after each cycle
+    for (let day = 1; day <= START_DAY; day++) {
+      let n = day <= 14 ? 4 + Math.floor(r() * 5) : 1 + Math.floor(r() * 3);
+      if (day === 15 || day === 16 || day === 29 || day === 30) n += 4;
+      for (let k = 0; k < n; k++) events.push({ type: 'directory_view', day, userId: profiles[Math.floor(r() * profiles.length)].id });
+    }
+    const cycles = [];
+    const ackRates = [0.67, 0.5];
+    for (let n = 1; n <= 2; n++) {
+      const day = cycleDay(n);
+      const res = runCycle(profiles, { history: cycles });
+      const cycle = { n, day, pairs: res.pairs.map((p, i) => ({ id: `c${n}-${i + 1}`, ...p })) };
+      cycles.push(cycle);
+      cycle.pairs.forEach((pair, i) => {
+        events.push({ type: 'match_sent', day, cycle: n, pairId: pair.id, members: pair.members });
+        if (i / cycle.pairs.length < ackRates[n - 1]) events.push({ type: 'match_ack', day: day + 1 + Math.floor(r() * 9), cycle: n, pairId: pair.id, userId: pair.members[0] });
+      });
+    }
+    return { profiles, events, cycles };
+  }
+
+  function defaultState() {
+    const h = seedHistory();
+    return {
+      today: START_DAY,
+      view: 'profile',
+      me: { id: 'me', name: 'Claire', department: 'Guest Experience', title: 'Experience Strategy', neighborhood: 'Fort Greene', interests: ['live music', 'ceramics', 'running'], restaurants: ['Olmsted', 'Miss Ada'], optedIn: false },
+      profiles: h.profiles, events: h.events, cycles: h.cycles,
+      dir: { q: '', borough: 'All' },
+    };
+  }
+
+  let state = load() || defaultState();
+  function load() { try { const s = localStorage.getItem(STORAGE_KEY); return s ? JSON.parse(s) : null; } catch (e) { return null; } }
+  function save() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) { /* private mode etc. */ } }
+
+  // ----- helpers -----
+  const $ = (sel) => document.querySelector(sel);
+  const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const initials = (name) => name.split(/\s+/).map((w) => w[0]).slice(0, 2).join('').toUpperCase();
+  const pct = (x) => Math.round(x * 100) + '%';
+  const bullet = (hood) => { const b = neighborhoodInfo(hood).borough; return `<span class="bullet" style="background:${BOROUGH_VAR[b] || BOROUGH_VAR.Other}" title="${esc(b)}">${BOROUGH_CODE[b] || '·'}</span>`; };
+  const hoodTag = (hood) => `<span class="hood">${bullet(hood)}${esc(hood)}<span class="b">· ${esc(neighborhoodInfo(hood).borough)}</span></span>`;
+  function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('show'), 2200); }
+  function everyone() { return state.me.optedIn ? [state.me, ...state.profiles] : state.profiles; }
+  function byId() { return Object.fromEntries([state.me, ...state.profiles].map((p) => [p.id, p])); }
+  function metrics() { return compute(state.events, { eligibleHeadcount: ELIGIBLE_HEADCOUNT, today: state.today }); }
+  function isAcked(pairId) { return state.events.some((e) => e.type === 'match_ack' && e.pairId === pairId); }
+
+  // ----- rail -----
+  function renderRail() {
+    const m = metrics();
+    const next = nextCycle(state.today, state.cycles.length);
+    const done = Math.min(state.today, PILOT_DAYS);
+    $('#pilotChip').innerHTML = `
+      <span class="eyebrow">Pilot status</span>
+      <div class="day num">Day ${done} <span>of ${PILOT_DAYS}</span></div>
+      <div class="small">Week ${m.week} · Phase ${PHASES.indexOf(m.phase) + 1}: ${m.phase.name}</div>
+      <div class="small muted">${next ? `Next match cycle in ${next.daysAway} day${next.daysAway === 1 ? '' : 's'}` : 'All four cycles complete'}</div>
+      <div class="pilot-bar" aria-hidden="true">${PHASES.map((ph) => { const len = ph.endDay - ph.startDay + 1; const fill = Math.max(0, Math.min(len, done - ph.startDay + 1)) / len; return `<i style="width:${len / PILOT_DAYS * 100}%;background:linear-gradient(90deg,var(--accent) ${fill * 100}%,transparent ${fill * 100}%);border-right:2px solid var(--surface)"></i>`; }).join('')}</div>`;
+    const items = [
+      ['profile', 'Your profile', state.me.optedIn ? 'in' : 'draft'],
+      ['directory', 'Directory', String(everyone().length)],
+      ['matches', 'Match cycles', String(state.cycles.length)],
+      ['pilot', 'Pilot dashboard', pct(m.optIn.rate)],
+    ];
+    $('#nav').innerHTML = items.map(([k, label, count]) => `<button type="button" data-view="${k}" ${state.view === k ? 'aria-current="page"' : ''}>${label}<span class="count num">${esc(count)}</span></button>`).join('');
+  }
+
+  // ----- profile -----
+  function renderProfile() {
+    const me = state.me;
+    const groups = BOROUGHS.map((b) => `<optgroup label="${esc(b)}">${NEIGHBORHOODS.filter((n) => n.borough === b).map((n) => `<option ${n.name === me.neighborhood ? 'selected' : ''}>${esc(n.name)}</option>`).join('')}</optgroup>`).join('');
+    const full = me.interests.length >= 5;
+    $('#profileForm').innerHTML = `
+      <div class="status ${me.optedIn ? '' : 'off'}"><span class="dot"></span>${me.optedIn ? `You're in the pilot as ${esc(me.neighborhood)}. Next cycle includes you.` : 'Not opted in yet. Example answers are filled in; make them yours.'}</div>
+      <div class="field"><label for="fName">Name</label><input type="text" id="fName" name="name" value="${esc(me.name)}" required></div>
+      <div class="row" style="align-items:start">
+        <div class="field" style="flex:1"><label for="fDept">Department</label><select id="fDept" name="department">${DEPARTMENTS.map((d) => `<option ${d === me.department ? 'selected' : ''}>${esc(d)}</option>`).join('')}</select></div>
+        <div class="field" style="flex:1"><label for="fTitle">Title <span class="muted" style="font-weight:400">(optional)</span></label><input type="text" id="fTitle" name="title" value="${esc(me.title || '')}"></div>
+      </div>
+      <div class="field"><label for="fHood">Home neighborhood</label><select id="fHood" name="neighborhood">${groups}</select><span class="hint">Weighted highest. Nearby neighborhoods (Park Slope ↔ Prospect Heights) count too.</span></div>
+      <div class="field"><label>Interests &amp; hobbies <span class="muted" style="font-weight:400">· ${me.interests.length} of 5</span></label>
+        <div class="chips" id="interestChips">${INTERESTS.map((i) => { const on = me.interests.includes(i); return `<button type="button" data-interest="${esc(i)}" aria-pressed="${on}" ${!on && full ? 'disabled' : ''}>${esc(i)}</button>`; }).join('')}</div></div>
+      <div class="field"><label for="fRest">Favorite restaurants</label><input type="text" id="fRest" name="restaurants" value="${esc(me.restaurants.join(', '))}" placeholder="Comma-separated"><span class="hint">A shared favorite is the easiest first plan, so it scores above a generic hobby.</span></div>
+      <div class="row">
+        <button type="submit" class="btn primary">${me.optedIn ? 'Save changes' : 'Save & opt in'}</button>
+        ${me.optedIn ? '<button type="button" class="btn ghost" id="leaveBtn">Leave the pilot</button>' : ''}
+        <span class="small muted">Opt-in only. Leaving hides your profile immediately.</span>
+      </div>`;
+
+    const draft = me;
+    const ranked = state.profiles.map((p) => ({ p, c: commonGround(draft, p) })).filter((x) => x.c.count > 0).sort((a, b) => b.c.score - a.c.score).slice(0, 3);
+    $('#profileSide').innerHTML = `
+      <div class="panel">
+        <span class="eyebrow">Your directory card</span>
+        <div class="card me" style="padding:0;border:0;background:transparent">
+          <div class="who"><div class="avatar" style="background:${BOROUGH_VAR[neighborhoodInfo(draft.neighborhood).borough]}">${esc(initials(draft.name || 'You'))}</div><div><div class="name">${esc(draft.name || 'You')}</div><div class="role">${esc(draft.title ? draft.title + ' · ' : '')}${esc(draft.department)}</div></div></div>
+          ${hoodTag(draft.neighborhood)}
+          <div class="chips" style="gap:4px">${draft.interests.map((i) => `<span class="tag">${esc(i)}</span>`).join('')}</div>
+          ${draft.restaurants.length ? `<div class="small muted">Loves ${esc(listify(draft.restaurants))}</div>` : ''}
+        </div>
+      </div>
+      <div class="panel">
+        <span class="eyebrow">Who you'd match with today</span>
+        ${ranked.length ? ranked.map(({ p, c }) => `<div class="row" style="gap:12px;align-items:flex-start"><div class="avatar" style="width:32px;height:32px;font-size:12px;background:${BOROUGH_VAR[neighborhoodInfo(p.neighborhood).borough]}">${esc(initials(p.name))}</div><div><div><b>${esc(p.name)}</b> <span class="muted small">· ${esc(p.department)}</span></div><div class="small" style="color:var(--accent-deep)">${esc(c.items.join(' · '))}</div></div></div>`).join('') : '<p class="small muted">Pick a neighborhood or a couple of interests and this fills in.</p>'}
+        <p class="small muted">Real matches only run on cycle days, and never repeat a pair.</p>
+      </div>`;
+  }
+
+  function readForm() {
+    const f = $('#profileForm');
+    return {
+      ...state.me,
+      name: f.name.value.trim() || 'You',
+      department: f.department.value,
+      title: f.title.value.trim(),
+      neighborhood: f.neighborhood.value,
+      restaurants: f.restaurants.value.split(',').map((s) => s.trim()).filter(Boolean),
+    };
+  }
+
+  // ----- directory -----
+  function renderDirectory() {
+    const { q, borough } = state.dir;
+    const counts = {}; for (const p of everyone()) { const b = neighborhoodInfo(p.neighborhood).borough; counts[b] = (counts[b] || 0) + 1; }
+    $('#boroughFilters').innerHTML = ['All', ...BOROUGHS.filter((b) => counts[b])].map((b) => `<button type="button" data-borough="${esc(b)}" aria-pressed="${borough === b}">${b === 'All' ? '' : `<span class="bullet" style="background:${BOROUGH_VAR[b]}">${BOROUGH_CODE[b]}</span>`}${esc(b)} <span class="muted num">${b === 'All' ? everyone().length : counts[b]}</span></button>`).join('');
+    if ($('#dirSearch').value !== q) $('#dirSearch').value = q;
+    const me = state.me;
+    const needle = q.trim().toLowerCase();
+    const rows = everyone()
+      .filter((p) => borough === 'All' || neighborhoodInfo(p.neighborhood).borough === borough)
+      .filter((p) => !needle || [p.name, p.neighborhood, p.department, p.title, ...(p.interests || []), ...(p.restaurants || [])].some((x) => String(x || '').toLowerCase().includes(needle)))
+      .map((p) => ({ p, c: p.id === 'me' ? { count: Infinity, items: [], score: Infinity } : commonGround(me, p) }))
+      .sort((a, b) => b.c.score - a.c.score || a.p.name.localeCompare(b.p.name));
+    $('#dirGrid').innerHTML = rows.length ? rows.map(({ p, c }) => {
+      const isMe = p.id === 'me';
+      const s = isMe ? null : scorePair(me, p, {});
+      const hitI = new Set(s ? s.shared.interests.map((x) => x.toLowerCase()) : []);
+      const hitR = new Set(s ? s.shared.restaurants.map((x) => x.toLowerCase()) : []);
+      return `<article class="card ${isMe ? 'me' : ''}">
+        <div class="who"><div class="avatar" style="background:${BOROUGH_VAR[neighborhoodInfo(p.neighborhood).borough]}">${esc(initials(p.name))}</div><div><div class="name">${esc(p.name)}${isMe ? ' <span class="muted small">(you)</span>' : ''}</div><div class="role">${esc(p.title ? p.title + ' · ' : '')}${esc(p.department)}</div></div></div>
+        ${hoodTag(p.neighborhood)}
+        <div class="chips" style="gap:4px">${(p.interests || []).map((i) => `<span class="tag ${hitI.has(i.toLowerCase()) ? 'hit' : ''}">${esc(i)}</span>`).join('')}</div>
+        ${(p.restaurants || []).length ? `<div class="small muted">Loves ${(p.restaurants || []).map((r) => hitR.has(r.toLowerCase()) ? `<b style="color:var(--accent-deep)">${esc(r)}</b>` : esc(r)).join(', ')}</div>` : ''}
+        ${isMe ? '' : `<div class="common ${c.count ? '' : 'none'}">${c.count ? `${c.count} in common · ${esc(c.items.join(' · '))}` : 'Nothing in common yet'}</div>
+        <div class="foot"><span class="small muted">${esc(neighborhoodInfo(p.neighborhood).area)}</span><button type="button" class="btn sm" data-sayhi="${esc(p.id)}">Say hi</button></div>`}
+      </article>`;
+    }).join('') : '<div class="empty">Nobody matches that yet. Try a borough, a hobby, or a team name.</div>';
+  }
+
+  // ----- matches -----
+  function renderMatches() {
+    const next = nextCycle(state.today, state.cycles.length);
+    const n = state.cycles.length;
+    const W = KYN.WEIGHTS;
+    $('#cycleBar').innerHTML = `
+      <div>
+        <div style="font-family:var(--display);font-weight:700">${next ? `Cycle ${next.n} runs on Day ${next.day} (Week ${weekForDay(next.day)})` : 'Four cycles done. The Run phase is complete.'}</div>
+        <div class="weights"><span>Same neighborhood <b>+${W.sameNeighborhood}</b></span><span>Nearby <b>+${W.nearbyNeighborhood}</b></span><span>Same borough <b>+${W.sameBorough}</b></span><span>Shared restaurant <b>+${W.sharedRestaurant} each</b></span><span>Shared interest <b>+${W.sharedInterest} each</b></span><span>Different teams <b>+${W.crossDepartment}</b></span><span>Repeat pair <b>never</b></span></div>
+      </div>
+      <button type="button" class="btn primary" id="runCycleBtn" ${next ? '' : 'disabled'}>${next ? `Fast-forward to Day ${next.day} and run cycle ${next.n}` : 'No cycles left'}</button>`;
+    const ids = byId();
+    const cycles = [...state.cycles].reverse();
+    $('#cycleList').innerHTML = cycles.length ? cycles.map((c, idx) => {
+      const acked = c.pairs.filter((p) => isAcked(p.id)).length;
+      const meIn = c.pairs.some((p) => p.members.includes('me'));
+      const body = `<div class="dm-list">${c.pairs.map((pair) => renderDM(pair, ids, c)).join('')}</div>`;
+      return `<details class="cycle" ${idx === 0 ? 'open' : ''}><summary>Cycle ${c.n} <span class="meta">Day ${c.day} · Week ${weekForDay(c.day)} · ${c.pairs.length} intros · ${acked} acknowledged (${pct(c.pairs.length ? acked / c.pairs.length : 0)})${meIn ? ' · includes you' : ''}</span></summary>${body}</details>`;
+    }).join('') : '<div class="empty">No cycles yet.</div>';
+  }
+
+  function renderDM(pair, ids, cycle) {
+    const acked = isAcked(pair.id);
+    const members = pair.members.map((id) => ids[id]).filter(Boolean);
+    const meIn = pair.members.includes('me');
+    return `<div class="dm ${acked ? 'is-acked' : ''} ${meIn ? 'is-me' : ''}">
+      <div class="members">${members.map((m, i) => `${i ? '<span class="sep">+</span>' : ''}<span class="row" style="gap:6px">${bullet(m.neighborhood)}${esc(m.name)}${m.id === 'me' ? ' <span class="muted">(you)</span>' : ''}</span>`).join('')}<span class="score num" title="Match score">${pair.score}</span></div>
+      <div class="msg"><div class="bot">KN</div><div>
+        <div class="from">Know Your Neighbors <span class="app-tag">APP</span><time>Day ${cycle.day}, 9:00 AM</time></div>
+        <div class="text">${esc(introMessage(pair, ids))}</div>
+        <div class="actions">${acked ? '<span class="acked">✓ Marked as met</span>' : `<button type="button" class="btn sm primary" data-ack="${esc(pair.id)}">We met ☕</button><button type="button" class="btn sm" data-skip="${esc(pair.id)}">Not this time</button>`}</div>
+      </div></div>
+    </div>`;
+  }
+
+  // ----- pilot -----
+  function sparkline(values, opts) {
+    const o = opts || {};
+    const w = 200, h = 38, pad = 3;
+    const max = Math.max(1, ...values);
+    const step = values.length > 1 ? (w - pad * 2) / (values.length - 1) : 0;
+    const pts = values.map((v, i) => [pad + i * step, h - pad - (v / max) * (h - pad * 2)]);
+    const line = pts.map((p) => p.join(',')).join(' ');
+    const area = `${pad},${h - pad} ${line} ${pts[pts.length - 1][0]},${h - pad}`;
+    const last = pts[pts.length - 1];
+    return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" aria-label="${esc(o.label || '')}" role="img"><polygon points="${area}" fill="var(--accent-soft)"></polygon><polyline points="${line}" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linejoin="round"></polyline><circle cx="${last[0]}" cy="${last[1]}" r="3" fill="var(--accent)"></circle></svg>`;
+  }
+
+  function renderPilot() {
+    const m = metrics();
+    const weeks = m.week;
+    const viewsByWeek = Array.from({ length: weeks }, (_, i) => state.events.filter((e) => e.type === 'directory_view' && e.day <= state.today && weekForDay(e.day) === i + 1).length);
+    const optInByWeek = Array.from({ length: weeks }, (_, i) => { const s = new Set(); for (const e of state.events) { if (e.day > (i + 1) * 7) continue; if (e.type === 'opt_in') s.add(e.userId); if (e.type === 'opt_out') s.delete(e.userId); } return s.size; });
+    const ackByCycle = Object.keys(m.matches.perCycle).sort().map((k) => m.matches.perCycle[k]);
+    const crossDept = (() => { const ids = byId(); let cross = 0, total = 0; for (const c of state.cycles) for (const p of c.pairs) { total++; const depts = new Set(p.members.map((id) => ids[id] && ids[id].department)); if (depts.size > 1) cross++; } return total ? cross / total : 0; })();
+
+    $('#tiles').innerHTML = `
+      <div class="tile"><span class="eyebrow">Opt-in rate</span><div class="big num">${pct(m.optIn.rate)}</div><div class="sub">${m.optIn.count} of ${m.optIn.eligible} corporate staff</div>${sparkline(optInByWeek, { label: 'Opted in, by week' })}</div>
+      <div class="tile"><span class="eyebrow">Directory usage</span><div class="big num">${m.directory.viewsThisWeek}<span>this week</span></div><div class="sub">${m.directory.views} views total · ${m.directory.uniqueViewers} people</div>${sparkline(viewsByWeek, { label: 'Directory views, by week' })}</div>
+      <div class="tile"><span class="eyebrow">Match acknowledgment</span><div class="big num">${pct(m.matches.rate)}</div><div class="sub">${m.matches.acknowledged} of ${m.matches.sent} intros marked “we met”</div>${sparkline(ackByCycle.length ? ackByCycle.map((c) => c.sent ? c.acknowledged / c.sent : 0) : [0], { label: 'Acknowledged share, by cycle' })}</div>
+      <div class="tile"><span class="eyebrow">Cross-team intros</span><div class="big num">${pct(crossDept)}</div><div class="sub">of all pairs crossed a department line</div><div class="small muted" style="margin-top:6px">The silo the proposal is aimed at.</div></div>`;
+
+    const cur = m.phase;
+    $('#timeline').innerHTML = `
+      <div class="row" style="justify-content:space-between"><span class="eyebrow">90-day pilot calendar</span><span class="small muted">HR never commits to more than the next four weeks.</span></div>
+      <div class="phases" style="margin-top:14px">
+        ${PHASES.map((ph, i) => `<div class="phase ${ph === cur ? 'current' : ''}"><span class="eyebrow">Phase ${i + 1} · ${ph.weeks}</span><b>${ph.name}</b><span class="small">${{ launch: 'Announce, open profiles and the directory. Zero budget.', run: 'Four match cycles, one every two weeks. No scope changes.', review: 'Compare against the numbers. Formalize, extend, or end.' }[ph.key]}</span></div>`).join('')}
+        <div class="today-marker" data-label="Day ${Math.min(state.today, PILOT_DAYS)}" style="left:${Math.min(state.today, PILOT_DAYS) / PILOT_DAYS * 100}%"></div>
+      </div>
+      <div class="cycle-dots">${[1, 2, 3, 4].map((n) => `<span><i class="${state.cycles.length >= n ? 'done' : ''}"></i>Cycle ${n} · Day ${cycleDay(n)}</span>`).join('')}</div>`;
+
+    const ids = byId();
+    const deptCounts = {}; for (const d of DEPARTMENTS) deptCounts[d] = 0; for (const p of everyone()) deptCounts[p.department] = (deptCounts[p.department] || 0) + 1;
+    const maxDept = Math.max(1, ...Object.values(deptCounts));
+    const hoodCounts = {}; for (const p of everyone()) { const b = neighborhoodInfo(p.neighborhood).borough; hoodCounts[b] = (hoodCounts[b] || 0) + 1; }
+    $('#pilotPanels').innerHTML = `
+      <div class="panel"><span class="eyebrow">Opted in, by department</span><div class="bars">${Object.entries(deptCounts).sort((a, b) => b[1] - a[1]).map(([d, n]) => `<div class="bar"><span>${esc(d)}</span><div class="track"><div class="fill" style="width:${n / maxDept * 100}%"></div></div><span class="n">${n}</span></div>`).join('')}</div><p class="small muted">Every corporate function represented is the point. A pilot that only Marketing joins isn't testing the silo problem.</p></div>
+      <div class="panel"><span class="eyebrow">Opted in, by borough</span><div class="bars">${BOROUGHS.filter((b) => hoodCounts[b]).map((b) => `<div class="bar"><span class="row" style="gap:6px"><span class="bullet" style="background:${BOROUGH_VAR[b]}">${BOROUGH_CODE[b]}</span>${esc(b)}</span><div class="track"><div class="fill" style="width:${hoodCounts[b] / Math.max(...Object.values(hoodCounts)) * 100}%;background:${BOROUGH_VAR[b]}"></div></div><span class="n">${hoodCounts[b]}</span></div>`).join('')}</div><p class="small muted">Matches follow the map: a Queens-heavy sign-up means more Astoria pairs.</p></div>
+      <div class="decision"><b>Week 12 decision</b><p class="small">Compare the three numbers above against the evidence base in the proposal, then pick one with HR:</p><p class="small"><b>Formalize</b> · <b>Extend</b> another 90 days · <b>End</b> the pilot.</p><p class="small muted">Ending it is a legitimate outcome, not a failure. That's the point of running it as a pilot.</p></div>`;
+  }
+
+  // ----- render + events -----
+  function render() {
+    renderRail();
+    document.querySelectorAll('.view').forEach((v) => v.classList.toggle('active', v.id === 'view-' + state.view));
+    ({ profile: renderProfile, directory: renderDirectory, matches: renderMatches, pilot: renderPilot })[state.view]();
+    save();
+  }
+
+  function setView(v) {
+    state.view = v;
+    if (v === 'directory') state.events.push({ type: 'directory_view', day: state.today, userId: 'me' });
+    render();
+    window.scrollTo({ top: 0 });
+  }
+
+  document.addEventListener('click', (ev) => {
+    const t = ev.target.closest('button');
+    if (!t) return;
+    if (t.dataset.view) return setView(t.dataset.view);
+    if (t.id === 'resetBtn') { state = defaultState(); render(); toast('Demo reset to Day 38'); return; }
+    if (t.dataset.interest) {
+      const draft = readForm();
+      const i = t.dataset.interest;
+      draft.interests = draft.interests.includes(i) ? draft.interests.filter((x) => x !== i) : [...draft.interests, i].slice(0, 5);
+      state.me = draft; render(); return;
+    }
+    if (t.id === 'leaveBtn') { state.me = { ...readForm(), optedIn: false }; state.events.push({ type: 'opt_out', day: state.today, userId: 'me' }); render(); toast('You left the pilot. Profile hidden.'); return; }
+    if (t.dataset.borough) { state.dir.borough = t.dataset.borough; render(); return; }
+    if (t.dataset.sayhi) { const p = byId()[t.dataset.sayhi]; toast(`In Slack this opens a DM with ${p.name.split(' ')[0]}`); return; }
+    if (t.dataset.ack) { state.events.push({ type: 'match_ack', day: state.today, pairId: t.dataset.ack, userId: 'me', cycle: state.cycles.find((c) => c.pairs.some((p) => p.id === t.dataset.ack)).n }); render(); toast('Logged. That\'s the only thing we track.'); return; }
+    if (t.dataset.skip) { toast('No problem. New match next cycle.'); return; }
+    if (t.id === 'runCycleBtn') return runNextCycle();
+  });
+
+  $('#profileForm').addEventListener('submit', (ev) => {
+    ev.preventDefault();
+    const was = state.me.optedIn;
+    state.me = { ...readForm(), optedIn: true };
+    if (!was) state.events.push({ type: 'opt_in', day: state.today, userId: 'me' });
+    render();
+    toast(was ? 'Profile saved' : `You're in. Next cycle includes you.`);
+  });
+  $('#profileForm').addEventListener('change', (ev) => { if (ev.target.matches('select, input')) { const opted = state.me.optedIn; state.me = { ...readForm(), optedIn: opted }; renderProfile(); save(); } });
+  $('#dirSearch').addEventListener('input', (ev) => { state.dir.q = ev.target.value; renderDirectory(); save(); });
+
+  function runNextCycle() {
+    const next = nextCycle(state.today, state.cycles.length);
+    if (!next) return;
+    state.today = next.day;
+    const people = everyone();
+    const res = runCycle(people, { history: state.cycles });
+    const cycle = { n: next.n, day: next.day, pairs: res.pairs.map((p, i) => ({ id: `c${next.n}-${i + 1}`, ...p })) };
+    state.cycles.push(cycle);
+    for (const pair of cycle.pairs) state.events.push({ type: 'match_sent', day: next.day, cycle: next.n, pairId: pair.id, members: pair.members });
+    // the day-after bump in directory views that a cycle produces
+    for (let k = 0; k < 4; k++) state.events.push({ type: 'directory_view', day: next.day, userId: people[k % people.length].id });
+    render();
+    const mine = cycle.pairs.find((p) => p.members.includes('me'));
+    toast(mine ? `Cycle ${next.n} sent. You're matched with ${listify(mine.members.filter((id) => id !== 'me').map((id) => byId()[id].name.split(' ')[0]))}.` : `Cycle ${next.n} sent: ${cycle.pairs.length} intros.`);
+  }
+
+  render();
+})();
+</script>
