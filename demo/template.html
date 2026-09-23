@@ -139,6 +139,7 @@
   /* ---------- directory ---------- */
   .toolbar { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 20px; }
   .toolbar input[type=text] { max-width: 320px; }
+  .toolbar select { width: auto; max-width: 220px; }
   .filters { display: flex; gap: 6px; flex-wrap: wrap; }
   .filters button { border: 1px solid var(--line); background: var(--surface); color: var(--ink-2); border-radius: 999px; padding: 5px 12px 5px 6px; font-size: 13px; display: inline-flex; gap: 7px; align-items: center; transition: border-color .12s, color .12s; }
   .filters button:hover { border-color: var(--line-strong); color: var(--ink); }
@@ -241,61 +242,146 @@
   }
   @media (prefers-reduced-motion: reduce) { *, .view.active { transition: none !important; animation: none !important; } }
 </style>
+<style>
+  /* ---------- mode + shared additions ---------- */
+  body[data-mode="admin"] { --rail-accent: #F2B84B; }
+  .seg { display: grid; grid-template-columns: 1fr 1fr; background: rgba(255,255,255,.06); border: 1px solid var(--rail-line); border-radius: 8px; padding: 3px; gap: 3px; }
+  .seg button { border: 0; background: transparent; color: var(--rail-ink-2); border-radius: 6px; padding: 7px 8px; font-family: var(--display); font-weight: 600; font-size: 12.5px; transition: background .15s, color .15s; }
+  .seg button[aria-pressed="true"] { background: var(--rail-ink); color: var(--rail); }
+  .rail-foot .demo { color: var(--rail-ink-3); font-size: 12px; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  .rail-foot .demo button { padding: 4px 8px; font-size: 12px; }
+  .pill { display: inline-flex; align-items: center; gap: 6px; padding: 2px 9px; border-radius: 999px; font-size: 12px; font-weight: 700; font-family: var(--display); letter-spacing: .02em; }
+  .pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .pill.good { background: var(--accent-soft); color: var(--accent-deep); }
+  .pill.warn { background: var(--warn-soft); color: var(--warn); }
+  .pill.bad { background: color-mix(in srgb, var(--bad) 14%, transparent); color: var(--bad); }
+  .pill.off { background: var(--surface-2); color: var(--ink-3); }
+  textarea { width: 100%; min-height: 120px; border: 1px solid var(--line-strong); border-radius: 9px; background: var(--surface); color: var(--ink); padding: 10px 12px; font: inherit; resize: vertical; }
+  textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); outline: none; }
+  input[type=number] { border: 1px solid var(--line-strong); border-radius: 9px; background: var(--surface); color: var(--ink); padding: 8px 11px; font: inherit; width: 120px; font-family: var(--display); font-weight: 600; }
 
+  /* employee home */
+  .hero { background: var(--rail); color: var(--rail-ink); border-radius: var(--radius); padding: 26px 28px; display: grid; grid-template-columns: 1.3fr 1fr; gap: 24px; margin-bottom: 20px; position: relative; overflow: hidden; }
+  .hero::after { content: ""; position: absolute; inset: auto -40px -60px auto; width: 260px; height: 260px; border-radius: 50%; background: radial-gradient(circle, var(--rail-accent), transparent 65%); opacity: .25; }
+  .hero h2 { color: var(--rail-ink); font-size: 26px; }
+  .hero p { color: var(--rail-ink-2); max-width: 48ch; }
+  .hero .eyebrow { color: var(--rail-accent); }
+  .hero .side { display: grid; gap: 10px; align-content: start; position: relative; z-index: 1; }
+  .hero .stat { display: flex; justify-content: space-between; align-items: baseline; border-bottom: 1px solid var(--rail-line); padding: 6px 0; font-size: 13.5px; color: var(--rail-ink-2); }
+  .hero .stat b { font-family: var(--display); color: var(--rail-ink); font-size: 18px; }
+  .hero .btn.primary { background: var(--rail-accent); border-color: var(--rail-accent); color: var(--rail); box-shadow: none; }
+  .hero .btn.ghost { color: var(--rail-ink); border-color: var(--rail-line); }
+  .hero .row { margin-top: 8px; position: relative; z-index: 1; }
+  .near { display: grid; gap: 12px; }
+  .near .person { display: grid; grid-template-columns: 36px 1fr auto; gap: 12px; align-items: center; }
+  .near .person .avatar { width: 36px; height: 36px; border-radius: 10px; font-size: 13px; }
+
+  /* admin */
+  .attention { display: grid; gap: 8px; }
+  .attention .item { display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; padding: 11px 14px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-sm); border-left-width: 4px; }
+  .attention .item.warn { border-left-color: var(--warn); }
+  .attention .item.bad { border-left-color: var(--bad); }
+  .attention .item.good { border-left-color: var(--accent); }
+  .attention .item .k { font-family: var(--display); font-weight: 700; font-size: 13px; white-space: nowrap; }
+  .table-wrap { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
+  table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+  th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: middle; white-space: nowrap; }
+  th { font-family: var(--display); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); background: var(--surface-2); position: sticky; top: 0; }
+  tr:last-child td { border-bottom: 0; }
+  tbody tr:hover td { background: color-mix(in srgb, var(--surface-2) 60%, transparent); }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  td .who { display: flex; align-items: center; gap: 10px; }
+  td .who .avatar { width: 30px; height: 30px; border-radius: 8px; font-size: 11px; }
+  td .who b { font-family: var(--display); }
+  .review-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 20px; align-items: start; }
+  .review-row { display: grid; grid-template-columns: 1.6fr .8fr .8fr auto; gap: 12px; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--line); }
+  .review-row:last-child { border-bottom: 0; }
+  .review-row .m { font-family: var(--display); font-weight: 700; }
+  .review-row .bench { font-size: 12.5px; color: var(--ink-3); margin-top: 2px; font-family: var(--body); font-weight: 400; }
+  .review-row .v { font-family: var(--display); font-weight: 800; font-size: 20px; font-variant-numeric: tabular-nums; }
+  .review-row .t { font-size: 13px; color: var(--ink-2); }
+  .options { display: grid; gap: 8px; }
+  .options button { text-align: left; border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: var(--radius-sm); padding: 12px 14px; display: grid; gap: 2px; transition: border-color .12s, background .12s; }
+  .options button b { font-family: var(--display); }
+  .options button span { font-size: 13px; color: var(--ink-2); }
+  .options button[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); }
+  .checklist { display: grid; gap: 6px; }
+  .checklist label { display: flex; gap: 10px; align-items: flex-start; padding: 9px 10px; border-radius: 8px; cursor: pointer; }
+  .checklist label:hover { background: var(--surface-2); }
+  .checklist input { margin-top: 3px; accent-color: var(--accent); }
+  .checklist label.done span { text-decoration: line-through; color: var(--ink-3); }
+  .copybox { background: var(--surface-2); border-radius: var(--radius-sm); padding: 14px 16px; font-size: 14px; white-space: pre-line; line-height: 1.5; border: 1px solid var(--line); }
+  .kv { display: grid; grid-template-columns: 1fr auto; gap: 8px 16px; font-size: 14px; }
+  .kv b { font-family: var(--display); font-variant-numeric: tabular-nums; }
+  @media (max-width: 900px) { .hero, .review-grid { grid-template-columns: 1fr; } .review-row { grid-template-columns: 1fr 1fr; } }
+</style>
 <div class="app">
   <aside class="rail">
     <div class="brand">
-      <span class="eyebrow">BKSE People &amp; Culture · Pilot</span>
+      <span class="eyebrow" id="brandEyebrow">BKSE People &amp; Culture · Pilot</span>
       <h1><svg class="mark" viewBox="0 0 30 20" aria-hidden="true"><circle cx="10" cy="10" r="9" fill="var(--rail-accent)"></circle><circle cx="20" cy="10" r="9" fill="var(--bk)" fill-opacity=".9"></circle><circle cx="15" cy="10" r="4" fill="var(--rail-ink)"></circle></svg>Know Your Neighbors</h1>
       <div class="line-strip" aria-hidden="true"><i style="background:var(--bk)"></i><i style="background:var(--qn)"></i><i style="background:var(--mn)"></i><i style="background:var(--bx)"></i><i style="background:var(--si)"></i><i style="background:var(--nj)"></i></div>
-      <p class="small">Colleagues matched by neighborhood first, shared interests second.</p>
+      <p class="small" id="brandTagline">Colleagues matched by neighborhood first, shared interests second.</p>
     </div>
     <div class="pilot-chip" id="pilotChip"></div>
     <nav id="nav" aria-label="Sections"></nav>
     <div class="rail-foot">
+      <div class="seg" id="modeSwitch" role="group" aria-label="View as"></div>
       <div class="legend" id="legend"></div>
-      <p>Web stand-in for the Slack app. Every person here is fictional; the matching and metrics are the real code.</p>
+      <p id="railNote">Web stand-in for the Slack app. Every person here is fictional; the matching and metrics are the real code.</p>
+      <div class="demo" id="demoControls"></div>
       <button type="button" id="resetBtn">Reset demo data</button>
     </div>
   </aside>
 
   <main>
+    <!-- ===== employee ===== -->
+    <section class="view" id="view-home" aria-label="Home"><div id="homeBody"></div></section>
+
     <section class="view" id="view-profile" aria-labelledby="h-profile">
-      <div class="view-head">
-        <div><h2 id="h-profile">Your neighbor profile</h2><p>The whole ask of a participant. About a minute, in a Slack modal. Nothing here is visible to anyone who hasn't opted in themselves.</p></div>
-      </div>
-      <div class="two-col">
-        <form class="panel" id="profileForm" autocomplete="off"></form>
-        <div class="stack" id="profileSide"></div>
-      </div>
+      <div class="view-head"><div><h2 id="h-profile">Your neighbor profile</h2><p>The whole ask. About a minute, in a Slack modal. Nothing here is visible to anyone who hasn't opted in themselves.</p></div></div>
+      <div class="two-col"><form class="panel" id="profileForm" autocomplete="off"></form><div class="stack" id="profileSide"></div></div>
     </section>
 
     <section class="view" id="view-directory" aria-labelledby="h-directory">
-      <div class="view-head">
-        <div><h2 id="h-directory">Directory</h2><p>Browse by borough, neighborhood, or hobby. Sorted by how much each person has in common with you. In Slack this is <code>/neighbors directory</code>.</p></div>
-      </div>
-      <div class="toolbar">
-        <input type="text" id="dirSearch" placeholder="Search neighborhood, hobby, or team" aria-label="Search directory">
-        <div class="filters" id="boroughFilters"></div>
-      </div>
+      <div class="view-head"><div><h2 id="h-directory">Directory</h2><p>Browse by borough, neighborhood, or hobby. Sorted by how much each person has in common with you. In Slack this is <code>/neighbors directory</code>.</p></div></div>
+      <div class="toolbar"><input type="text" id="dirSearch" placeholder="Search neighborhood, hobby, or team" aria-label="Search directory"><div class="filters" id="boroughFilters"></div></div>
       <div class="grid" id="dirGrid"></div>
     </section>
 
     <section class="view" id="view-matches" aria-labelledby="h-matches">
-      <div class="view-head">
-        <div><h2 id="h-matches">Match cycles</h2><p>Every two weeks the bot pairs everyone opted in and opens a group DM. Admin view: every intro from the latest cycle, with the one button we track.</p></div>
-      </div>
+      <div class="view-head"><div><h2 id="h-matches">My matches</h2><p>Every intro the bot has sent you. Tap "We met" once you've actually talked. That's the only thing anyone tracks.</p></div></div>
+      <div class="stack" id="myMatches"></div>
+    </section>
+
+    <!-- ===== admin ===== -->
+    <section class="view" id="view-overview" aria-labelledby="h-overview">
+      <div class="view-head"><div><h2 id="h-overview">Pilot overview</h2><p>The three numbers the proposal commits to, what needs attention this week, and where we are on the 90-day calendar.</p></div></div>
+      <div class="tiles" id="tiles"></div>
+      <div class="timeline" id="timeline"></div>
+      <div class="two-col" style="grid-template-columns: 1.1fr 1fr"><div class="panel flat stack"><span class="eyebrow">Needs attention</span><div class="attention" id="attention"></div></div><div class="stack" id="pilotPanels"></div></div>
+    </section>
+
+    <section class="view" id="view-participants" aria-labelledby="h-participants">
+      <div class="view-head"><div><h2 id="h-participants">Participants</h2><p>Everyone who has opted in, what they told us, and how their matches went. Opt-outs stay listed so the count is honest.</p></div><button type="button" class="btn" id="copyCsvBtn">Copy as CSV</button></div>
+      <div class="toolbar"><input type="text" id="partSearch" placeholder="Search name, team, neighborhood" aria-label="Search participants"><select id="partDept" aria-label="Department"></select><select id="partStatus" aria-label="Status"><option value="all">All statuses</option><option value="in">Opted in</option><option value="out">Opted out</option><option value="unmet">Never marked met</option></select><span class="small muted" id="partSummary"></span></div>
+      <div class="table-wrap" id="partTable"></div>
+    </section>
+
+    <section class="view" id="view-cycles" aria-labelledby="h-cycles">
+      <div class="view-head"><div><h2 id="h-cycles">Match cycles</h2><p>Every two weeks the bot pairs everyone opted in and opens a group DM. This is every intro sent, with who has closed the loop.</p></div></div>
       <div class="cycle-bar" id="cycleBar"></div>
       <div class="stack" id="cycleList"></div>
     </section>
 
-    <section class="view" id="view-pilot" aria-labelledby="h-pilot">
-      <div class="view-head">
-        <div><h2 id="h-pilot">Pilot dashboard</h2><p>The three numbers the proposal commits to, plus the calendar. This is what HR sees at the Week 12 review.</p></div>
-      </div>
-      <div class="tiles" id="tiles"></div>
-      <div class="timeline" id="timeline"></div>
-      <div class="three" id="pilotPanels"></div>
+    <section class="view" id="view-review" aria-labelledby="h-review">
+      <div class="view-head"><div><h2 id="h-review">Week 12 review</h2><p>The worksheet for the decision meeting. Targets were set before launch; the benchmarks are the ones cited in the proposal.</p></div></div>
+      <div class="review-grid"><div class="panel" id="reviewTable"></div><div class="stack" id="reviewSide"></div></div>
+    </section>
+
+    <section class="view" id="view-settings" aria-labelledby="h-settings">
+      <div class="view-head"><div><h2 id="h-settings">Settings &amp; launch</h2><p>What an admin can change, what they can't, and the Phase 1 checklist.</p></div></div>
+      <div class="three" id="settingsBody" style="grid-template-columns: 1fr 1fr 1fr"></div>
     </section>
   </main>
 </div>
@@ -305,16 +391,29 @@
 <script>
 (function () {
   'use strict';
+  const LOCKED_MODE = null; /*__KYN_LOCK__*/
   const { NEIGHBORHOODS, BOROUGHS, neighborhoodInfo, runCycle, introMessage, commonGround, scorePair, listify } = KYN;
   const { DEPARTMENTS, INTERESTS, TEAMS, ELIGIBLE_HEADCOUNT, SEED_PROFILES } = KYN;
   const { PILOT_DAYS, PHASES, phaseForDay, weekForDay, cycleDay, nextCycle, compute } = KYN;
 
-  const STORAGE_KEY = 'kyn-proto-v2';
-  const START_DAY = 38; // a Wednesday in Week 6: two cycles run, third due in five days
+  const STORAGE_KEY = 'kyn-proto-v3';
+  const START_DAY = 38;
   const BOROUGH_VAR = { Brooklyn: 'var(--bk)', Queens: 'var(--qn)', Manhattan: 'var(--mn)', Bronx: 'var(--bx)', 'Staten Island': 'var(--si)', 'New Jersey': 'var(--nj)', Other: 'var(--other)' };
   const BOROUGH_CODE = { Brooklyn: 'BK', Queens: 'QN', Manhattan: 'MN', Bronx: 'BX', 'Staten Island': 'SI', 'New Jersey': 'NJ', Other: '·' };
+  const VIEWS = {
+    employee: [['home', 'Home'], ['profile', 'Your profile'], ['directory', 'Directory'], ['matches', 'My matches']],
+    admin: [['overview', 'Overview'], ['participants', 'Participants'], ['cycles', 'Match cycles'], ['review', 'Week 12 review'], ['settings', 'Settings & launch']],
+  };
+  const TARGETS = { optIn: 0.25, directoryReach: 0.5, ack: 0.5, cross: 0.75 };
+  const CHECKLIST = [
+    'Announce the pilot in #bkse-corporate as opt-in, zero budget',
+    'Open profile creation and the directory (/neighbors profile)',
+    'Name two pilot admins who can run cycles',
+    'Put the four cycle dates on the People & Culture calendar',
+    'Confirm the opt-out path with HR (/neighbors leave hides you immediately)',
+    'Book the Week 12 review with HR before Phase 2 starts',
+  ];
 
-  // ----- deterministic pseudo-random for seeded history -----
   function rng(seed) { let a = seed >>> 0; return () => { a += 0x6D2B79F5; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
 
   function seedHistory() {
@@ -322,7 +421,6 @@
     const events = [];
     const profiles = SEED_PROFILES.map((p) => ({ ...p }));
     profiles.forEach((p, i) => events.push({ type: 'opt_in', day: 1 + Math.floor(i * 13 / profiles.length), userId: p.id }));
-    // directory views: busy at launch, steady through the run phase, bumps after each cycle
     for (let day = 1; day <= START_DAY; day++) {
       let n = day <= 14 ? 4 + Math.floor(r() * 5) : 1 + Math.floor(r() * 3);
       if (day === 15 || day === 16 || day === 29 || day === 30) n += 4;
@@ -340,6 +438,9 @@
         if (i / cycle.pairs.length < ackRates[n - 1]) events.push({ type: 'match_ack', day: day + 1 + Math.floor(r() * 9), cycle: n, pairId: pair.id, userId: pair.members[0] });
       });
     }
+    // one opt-out so the participants table shows the honest count
+    profiles[16].optedIn = false;
+    events.push({ type: 'opt_out', day: 33, userId: profiles[16].id });
     return { profiles, events, cycles };
   }
 
@@ -347,25 +448,32 @@
     const h = seedHistory();
     return {
       today: START_DAY,
-      view: 'profile',
+      mode: LOCKED_MODE || 'employee',
+      views: { employee: 'home', admin: 'overview' },
       me: { id: 'me', name: 'Claire', department: 'Guest Experience', title: 'Experience Strategy', neighborhood: 'Fort Greene', interests: ['live music', 'ceramics', 'running'], restaurants: ['Olmsted', 'Miss Ada'], teams: ['Liberty', 'Nets'], optedIn: false },
       profiles: h.profiles, events: h.events, cycles: h.cycles,
       dir: { q: '', borough: 'All' },
+      part: { q: '', dept: 'all', status: 'all' },
+      settings: { eligible: ELIGIBLE_HEADCOUNT, admins: 'Aisha Diallo, Samuel Adeyemi' },
+      checklist: [true, true, true, true, true, false],
+      review: { notes: '', decision: '' },
     };
   }
 
   let state = load() || defaultState();
-  if (!state.me.teams) state.me.teams = [];
+  if (LOCKED_MODE) state.mode = LOCKED_MODE;
   function load() { try { const s = localStorage.getItem(STORAGE_KEY); return s ? JSON.parse(s) : null; } catch (e) { return null; } }
-  function save() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) { /* private mode etc. */ } }
+  function save() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) { /* private mode */ } }
 
   // ----- helpers -----
   const $ = (sel) => document.querySelector(sel);
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const initials = (name) => name.split(/\s+/).map((w) => w[0]).slice(0, 2).join('').toUpperCase();
   const pct = (x) => Math.round(x * 100) + '%';
+  const bcolor = (hood) => BOROUGH_VAR[neighborhoodInfo(hood).borough] || BOROUGH_VAR.Other;
   const bullet = (hood) => { const b = neighborhoodInfo(hood).borough; return `<span class="bullet" style="background:${BOROUGH_VAR[b] || BOROUGH_VAR.Other}" title="${esc(b)}">${BOROUGH_CODE[b] || '·'}</span>`; };
   const hoodTag = (hood) => `<span class="hood">${bullet(hood)}${esc(hood)}<span class="b">· ${esc(neighborhoodInfo(hood).borough)}</span></span>`;
+  const avatar = (p, extra) => `<div class="avatar" style="background-color:${bcolor(p.neighborhood)};${extra || ''}">${esc(initials(p.name || 'You'))}</div>`;
   const INTEREST_CAP = 5, TEAM_CAP = 4;
   function tagRow(p, hitI, hitT) {
     const ints = (p.interests || []).map((i) => `<span class="tag ${hitI && hitI.has(i.toLowerCase()) ? 'hit' : ''}">${esc(i)}</span>`);
@@ -379,34 +487,85 @@
     return `<div class="chips">${list.map((v) => btn(v, false)).join('')}${custom.map((v) => btn(v, true)).join('')}</div>
       <div class="writein"><input type="text" id="add-${kind}" placeholder="${kind === 'team' ? 'Another team, any sport or college' : 'Something not listed'}" aria-label="Add your own ${kind}" ${full ? 'disabled' : ''}><button type="button" class="btn sm" data-add="${kind}" ${full ? 'disabled' : ''}>Add</button></div>`;
   }
-  function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('show'), 2200); }
-  function everyone() { return state.me.optedIn ? [state.me, ...state.profiles] : state.profiles; }
+  function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('show'), 2400); }
+  function everyone() { return state.me.optedIn ? [state.me, ...state.profiles.filter((p) => p.optedIn)] : state.profiles.filter((p) => p.optedIn); }
   function byId() { return Object.fromEntries([state.me, ...state.profiles].map((p) => [p.id, p])); }
-  function metrics() { return compute(state.events, { eligibleHeadcount: ELIGIBLE_HEADCOUNT, today: state.today }); }
+  function metrics() { return compute(state.events, { eligibleHeadcount: state.settings.eligible, today: state.today }); }
   function isAcked(pairId) { return state.events.some((e) => e.type === 'match_ack' && e.pairId === pairId); }
+  function currentView() { return state.views[state.mode]; }
+  function myPairs() { return state.cycles.flatMap((c) => c.pairs.filter((p) => p.members.includes('me')).map((p) => ({ pair: p, cycle: c }))); }
+  function crossShare() { const ids = byId(); let cross = 0, total = 0; for (const c of state.cycles) for (const p of c.pairs) { total++; if (new Set(p.members.map((id) => ids[id] && ids[id].department)).size > 1) cross++; } return total ? cross / total : 0; }
 
   // ----- rail -----
   function renderRail() {
     const m = metrics();
     const next = nextCycle(state.today, state.cycles.length);
     const done = Math.min(state.today, PILOT_DAYS);
+    const admin = state.mode === 'admin';
+    document.body.dataset.mode = state.mode;
+    $('#brandEyebrow').textContent = admin ? 'Pilot console · People & Culture' : 'BKSE People & Culture · Pilot';
+    $('#brandTagline').textContent = admin ? 'Run the 90-day pilot: participants, cycles, numbers, and the Week 12 call.' : 'Colleagues matched by neighborhood first, shared interests second.';
     $('#pilotChip').innerHTML = `
       <span class="eyebrow">Pilot status</span>
       <div class="day num">Day ${done} <span>of ${PILOT_DAYS}</span></div>
       <div class="small">Week ${m.week} · Phase ${PHASES.indexOf(m.phase) + 1}: ${m.phase.name}</div>
       <div class="small muted">${next ? `Next match cycle in ${next.daysAway} day${next.daysAway === 1 ? '' : 's'}` : 'All four cycles complete'}</div>
-      <div class="pilot-bar" aria-hidden="true">${PHASES.map((ph) => { const len = ph.endDay - ph.startDay + 1; const fill = Math.max(0, Math.min(len, done - ph.startDay + 1)) / len; return `<i style="width:${len / PILOT_DAYS * 100}%;background:linear-gradient(90deg,var(--accent) ${fill * 100}%,transparent ${fill * 100}%);border-right:0"></i>`; }).join('')}</div>`;
+      <div class="pilot-bar" aria-hidden="true">${PHASES.map((ph) => { const len = ph.endDay - ph.startDay + 1; const fill = Math.max(0, Math.min(len, done - ph.startDay + 1)) / len; return `<i style="width:${len / PILOT_DAYS * 100}%;background:linear-gradient(90deg,var(--rail-accent) ${fill * 100}%,transparent ${fill * 100}%)"></i>`; }).join('')}</div>`;
+    const counts = {
+      home: state.me.optedIn ? 'in' : 'join', profile: state.me.optedIn ? 'in' : 'draft', directory: String(everyone().length), matches: String(myPairs().length),
+      overview: pct(m.optIn.rate), participants: String(m.optIn.count), cycles: String(state.cycles.length), review: `wk ${m.week}`, settings: `${state.checklist.filter(Boolean).length}/${CHECKLIST.length}`,
+    };
+    $('#nav').innerHTML = VIEWS[state.mode].map(([k, label]) => `<button type="button" data-view="${k}" ${currentView() === k ? 'aria-current="page"' : ''}>${label}<span class="count num">${esc(counts[k])}</span></button>`).join('');
+    $('#modeSwitch').innerHTML = LOCKED_MODE ? '' : `<button type="button" data-mode="employee" aria-pressed="${!admin}">Employee</button><button type="button" data-mode="admin" aria-pressed="${admin}">Pilot admin</button>`;
+    $('#modeSwitch').hidden = Boolean(LOCKED_MODE);
     $('#legend').innerHTML = BOROUGHS.map((b) => `<span><span class="bullet" style="background:${BOROUGH_VAR[b]}">${BOROUGH_CODE[b]}</span>${esc(b)}</span>`).join('');
-    const items = [
-      ['profile', 'Your profile', state.me.optedIn ? 'in' : 'draft'],
-      ['directory', 'Directory', String(everyone().length)],
-      ['matches', 'Match cycles', String(state.cycles.length)],
-      ['pilot', 'Pilot dashboard', pct(m.optIn.rate)],
-    ];
-    $('#nav').innerHTML = items.map(([k, label, count]) => `<button type="button" data-view="${k}" ${state.view === k ? 'aria-current="page"' : ''}>${label}<span class="count num">${esc(count)}</span></button>`).join('');
+    $('#railNote').textContent = admin ? 'HR-only view. Employees never see other people\'s acknowledgments or the review worksheet.' : 'Web stand-in for the Slack app. Every person here is fictional; the matching and metrics are the real code.';
+    $('#demoControls').innerHTML = !admin && next ? `<span>Demo:</span><button type="button" id="ffBtn">Jump to cycle ${next.n} (Day ${next.day})</button>` : '';
   }
 
-  // ----- profile -----
+  // ----- employee: home -----
+  function renderHome() {
+    const me = state.me;
+    const m = metrics();
+    const next = nextCycle(state.today, state.cycles.length);
+    const people = state.profiles.filter((p) => p.optedIn);
+    const myB = neighborhoodInfo(me.neighborhood).borough;
+    const sameBorough = people.filter((p) => neighborhoodInfo(p.neighborhood).borough === myB).length;
+    const shareInterest = people.filter((p) => commonGround(me, p).count > 0).length;
+    const mine = myPairs();
+    const latest = mine[mine.length - 1];
+    const ids = byId();
+    const ranked = people.map((p) => ({ p, c: commonGround(me, p) })).filter((x) => x.c.count > 0).sort((a, b) => b.c.score - a.c.score).slice(0, 4);
+    $('#homeBody').innerHTML = `
+      <div class="hero">
+        <div>
+          <span class="eyebrow">${me.optedIn ? 'You\'re in' : 'Opt-in pilot · Day ' + state.today}</span>
+          <h2 style="margin-top:8px">${me.optedIn ? `Hi ${esc(me.name.split(' ')[0])}. ${next ? `Cycle ${next.n} goes out in ${next.daysAway} day${next.daysAway === 1 ? '' : 's'}.` : 'The last cycle has gone out.'}` : `Hi ${esc(me.name.split(' ')[0])}. Meet the colleague who lives down the block.`}</h2>
+          <p style="margin-top:10px">${me.optedIn ? `You're listed as ${esc(me.neighborhood)}. Every two weeks you get one intro, weighted toward people near home and people who like what you like.` : 'Fill in a one-minute profile and every two weeks the bot introduces you to one colleague who shares your neighborhood or a hobby. Opt out any time.'}</p>
+          <div class="row">${me.optedIn ? '<button type="button" class="btn ghost" data-view="profile">Edit profile</button><button type="button" class="btn ghost" data-view="directory">Browse neighbors</button>' : '<button type="button" class="btn primary" data-view="profile">Join the pilot</button><button type="button" class="btn ghost" data-view="directory">See who\'s in first</button>'}</div>
+        </div>
+        <div class="side">
+          <div class="stat"><span>Colleagues in the pilot</span><b class="num">${people.length}</b></div>
+          <div class="stat"><span>In ${esc(myB)}</span><b class="num">${sameBorough}</b></div>
+          <div class="stat"><span>Share something with you</span><b class="num">${shareInterest}</b></div>
+          <div class="stat"><span>Intros so far</span><b class="num">${m.matches.sent}</b></div>
+        </div>
+      </div>
+      <div class="two-col">
+        <div class="stack">
+          <span class="eyebrow">Your latest intro</span>
+          ${latest ? renderDM(latest.pair, ids, latest.cycle, true) : `<div class="empty">${me.optedIn ? `Nothing yet. You joined after cycle ${state.cycles.length}, so your first intro lands with cycle ${next ? next.n : '—'}.` : 'Join the pilot and your first intro arrives with the next cycle.'}</div>`}
+          ${mine.length > 1 ? '<button type="button" class="btn ghost" data-view="matches" style="justify-self:start">All my matches</button>' : ''}
+        </div>
+        <div class="panel">
+          <span class="eyebrow">Near you, or into the same things</span>
+          <div class="near">${ranked.length ? ranked.map(({ p, c }) => `<div class="person">${avatar(p)}<div><div><b style="font-family:var(--display)">${esc(p.name)}</b> <span class="muted small">· ${esc(p.department)}</span></div><div class="small" style="color:var(--accent-deep)">${esc(c.items.slice(0, 2).join(' · '))}</div></div><button type="button" class="btn sm" data-sayhi="${esc(p.id)}">Say hi</button></div>`).join('') : '<p class="small muted">Add a neighborhood or a couple of interests and this fills in.</p>'}</div>
+          <p class="small muted">Based on your ${me.optedIn ? 'profile' : 'draft profile'}. The directory has everyone.</p>
+        </div>
+      </div>`;
+  }
+
+  // ----- employee: profile -----
   function renderProfile() {
     const me = state.me;
     const groups = BOROUGHS.map((b) => `<optgroup label="${esc(b)}">${NEIGHBORHOODS.filter((n) => n.borough === b).map((n) => `<option ${n.name === me.neighborhood ? 'selected' : ''}>${esc(n.name)}</option>`).join('')}</optgroup>`).join('');
@@ -431,14 +590,13 @@
         ${me.optedIn ? '<button type="button" class="btn ghost" id="leaveBtn">Leave the pilot</button>' : ''}
         <span class="small muted">Opt-in only. Leaving hides your profile immediately.</span>
       </div>`;
-
     const draft = me;
-    const ranked = state.profiles.map((p) => ({ p, c: commonGround(draft, p) })).filter((x) => x.c.count > 0).sort((a, b) => b.c.score - a.c.score).slice(0, 3);
+    const ranked = state.profiles.filter((p) => p.optedIn).map((p) => ({ p, c: commonGround(draft, p) })).filter((x) => x.c.count > 0).sort((a, b) => b.c.score - a.c.score).slice(0, 3);
     $('#profileSide').innerHTML = `
       <div class="panel">
         <span class="eyebrow">Your directory card</span>
         <div class="card me" style="padding:0;border:0;background:transparent">
-          <div class="who"><div class="avatar" style="background:${BOROUGH_VAR[neighborhoodInfo(draft.neighborhood).borough]}">${esc(initials(draft.name || 'You'))}</div><div><div class="name">${esc(draft.name || 'You')}</div><div class="role">${esc(draft.title ? draft.title + ' · ' : '')}${esc(draft.department)}</div></div></div>
+          <div class="who">${avatar(draft)}<div><div class="name">${esc(draft.name || 'You')}</div><div class="role">${esc(draft.title ? draft.title + ' · ' : '')}${esc(draft.department)}</div></div></div>
           ${hoodTag(draft.neighborhood)}
           ${tagRow(draft)}
           ${draft.restaurants.length ? `<div class="small muted">Loves ${esc(listify(draft.restaurants))}</div>` : ''}
@@ -446,24 +604,18 @@
       </div>
       <div class="panel">
         <span class="eyebrow">Who you'd match with today</span>
-        ${ranked.length ? ranked.map(({ p, c }) => `<div class="row" style="gap:12px;align-items:flex-start"><div class="avatar" style="width:32px;height:32px;font-size:12px;background:${BOROUGH_VAR[neighborhoodInfo(p.neighborhood).borough]}">${esc(initials(p.name))}</div><div><div><b>${esc(p.name)}</b> <span class="muted small">· ${esc(p.department)}</span></div><div class="small" style="color:var(--accent-deep)">${esc(c.items.join(' · '))}</div></div></div>`).join('') : '<p class="small muted">Pick a neighborhood or a couple of interests and this fills in.</p>'}
+        ${ranked.length ? ranked.map(({ p, c }) => `<div class="row" style="gap:12px;align-items:flex-start">${avatar(p, 'width:32px;height:32px;font-size:12px')}<div><div><b>${esc(p.name)}</b> <span class="muted small">· ${esc(p.department)}</span></div><div class="small" style="color:var(--accent-deep)">${esc(c.items.join(' · '))}</div></div></div>`).join('') : '<p class="small muted">Pick a neighborhood or a couple of interests and this fills in.</p>'}
         <p class="small muted">Real matches only run on cycle days, and never repeat a pair.</p>
       </div>`;
   }
 
   function readForm() {
     const f = $('#profileForm');
-    return {
-      ...state.me,
-      name: f.name.value.trim() || 'You',
-      department: f.department.value,
-      title: f.title.value.trim(),
-      neighborhood: f.neighborhood.value,
-      restaurants: f.restaurants.value.split(',').map((s) => s.trim()).filter(Boolean),
-    };
+    if (!f.name) return { ...state.me };
+    return { ...state.me, name: f.name.value.trim() || 'You', department: f.department.value, title: f.title.value.trim(), neighborhood: f.neighborhood.value, restaurants: f.restaurants.value.split(',').map((s) => s.trim()).filter(Boolean) };
   }
 
-  // ----- directory -----
+  // ----- employee: directory -----
   function renderDirectory() {
     const { q, borough } = state.dir;
     const counts = {}; for (const p of everyone()) { const b = neighborhoodInfo(p.neighborhood).borough; counts[b] = (counts[b] || 0) + 1; }
@@ -473,7 +625,7 @@
     const needle = q.trim().toLowerCase();
     const rows = everyone()
       .filter((p) => borough === 'All' || neighborhoodInfo(p.neighborhood).borough === borough)
-      .filter((p) => !needle || [p.name, p.neighborhood, p.department, p.title, ...(p.interests || []), ...(p.restaurants || [])].some((x) => String(x || '').toLowerCase().includes(needle)))
+      .filter((p) => !needle || [p.name, p.neighborhood, p.department, p.title, ...(p.interests || []), ...(p.restaurants || []), ...(p.teams || [])].some((x) => String(x || '').toLowerCase().includes(needle)))
       .map((p) => ({ p, c: p.id === 'me' ? { count: Infinity, items: [], score: Infinity } : commonGround(me, p) }))
       .sort((a, b) => b.c.score - a.c.score || a.p.name.localeCompare(b.p.name));
     $('#dirGrid').innerHTML = rows.length ? rows.map(({ p, c }) => {
@@ -483,7 +635,7 @@
       const hitR = new Set(s ? s.shared.restaurants.map((x) => x.toLowerCase()) : []);
       const hitT = new Set(s ? s.shared.teams.map((x) => x.toLowerCase()) : []);
       return `<article class="card ${isMe ? 'me' : ''}">
-        <div class="who"><div class="avatar" style="background:${BOROUGH_VAR[neighborhoodInfo(p.neighborhood).borough]}">${esc(initials(p.name))}</div><div><div class="name">${esc(p.name)}${isMe ? ' <span class="muted small">(you)</span>' : ''}</div><div class="role">${esc(p.title ? p.title + ' · ' : '')}${esc(p.department)}</div></div></div>
+        <div class="who">${avatar(p)}<div><div class="name">${esc(p.name)}${isMe ? ' <span class="muted small">(you)</span>' : ''}</div><div class="role">${esc(p.title ? p.title + ' · ' : '')}${esc(p.department)}</div></div></div>
         ${hoodTag(p.neighborhood)}
         ${tagRow(p, hitI, hitT)}
         ${(p.restaurants || []).length ? `<div class="small muted">Loves ${(p.restaurants || []).map((r) => hitR.has(r.toLowerCase()) ? `<b style="color:var(--accent-deep)">${esc(r)}</b>` : esc(r)).join(', ')}</div>` : ''}
@@ -493,42 +645,33 @@
     }).join('') : '<div class="empty">Nobody matches that yet. Try a borough, a hobby, or a team name.</div>';
   }
 
-  // ----- matches -----
-  function renderMatches() {
-    const next = nextCycle(state.today, state.cycles.length);
-    const n = state.cycles.length;
-    const W = KYN.WEIGHTS;
-    $('#cycleBar').innerHTML = `
-      <div>
-        <div style="font-family:var(--display);font-weight:700">${next ? `Cycle ${next.n} runs on Day ${next.day} (Week ${weekForDay(next.day)})` : 'Four cycles done. The Run phase is complete.'}</div>
-        <div class="weights"><span>Same neighborhood <b>+${W.sameNeighborhood}</b></span><span>Nearby <b>+${W.nearbyNeighborhood}</b></span><span>Same borough <b>+${W.sameBorough}</b></span><span>Shared restaurant <b>+${W.sharedRestaurant} each</b></span><span>Shared team <b>+${W.sharedTeam} each</b></span><span>Shared interest <b>+${W.sharedInterest} each</b></span><span>Different teams <b>+${W.crossDepartment}</b></span><span>Repeat pair <b>never</b></span></div>
-      </div>
-      <button type="button" class="btn primary" id="runCycleBtn" ${next ? '' : 'disabled'}>${next ? `Fast-forward to Day ${next.day} and run cycle ${next.n}` : 'No cycles left'}</button>`;
+  // ----- employee: my matches -----
+  function renderMyMatches() {
     const ids = byId();
-    const cycles = [...state.cycles].reverse();
-    $('#cycleList').innerHTML = cycles.length ? cycles.map((c, idx) => {
-      const acked = c.pairs.filter((p) => isAcked(p.id)).length;
-      const meIn = c.pairs.some((p) => p.members.includes('me'));
-      const body = `<div class="dm-list">${c.pairs.map((pair) => renderDM(pair, ids, c)).join('')}</div>`;
-      return `<details class="cycle" ${idx === 0 ? 'open' : ''}><summary>Cycle ${c.n} <span class="meta">Day ${c.day} · Week ${weekForDay(c.day)} · ${c.pairs.length} intros · ${acked} acknowledged (${pct(c.pairs.length ? acked / c.pairs.length : 0)})${meIn ? ' · includes you' : ''}</span></summary>${body}</details>`;
-    }).join('') : '<div class="empty">No cycles yet.</div>';
+    const mine = myPairs().reverse();
+    const next = nextCycle(state.today, state.cycles.length);
+    $('#myMatches').innerHTML = mine.length
+      ? `<div class="dm-list">${mine.map(({ pair, cycle }) => renderDM(pair, ids, cycle, true)).join('')}</div>`
+      : `<div class="empty">${state.me.optedIn ? `No intros yet. Your first one arrives with cycle ${next ? next.n : '—'}${next ? ` on Day ${next.day}` : ''}.` : 'Join the pilot to get matched. Your intros will show up here.'}</div>`;
   }
 
-  function renderDM(pair, ids, cycle) {
+  // ----- shared: DM card -----
+  function renderDM(pair, ids, cycle, personal) {
     const acked = isAcked(pair.id);
     const members = pair.members.map((id) => ids[id]).filter(Boolean);
     const meIn = pair.members.includes('me');
-    return `<div class="dm ${acked ? 'is-acked' : ''} ${meIn ? 'is-me' : ''}">
+    const canAck = personal ? meIn : true;
+    return `<div class="dm ${acked ? 'is-acked' : ''} ${meIn && !personal ? 'is-me' : ''}">
       <div class="members">${members.map((m, i) => `${i ? '<span class="sep">+</span>' : ''}<span class="row" style="gap:6px">${bullet(m.neighborhood)}${esc(m.name)}${m.id === 'me' ? ' <span class="muted">(you)</span>' : ''}</span>`).join('')}<span class="meter" title="Match score ${pair.score}">Match<i><b style="width:${Math.min(100, Math.round(pair.score / 24 * 100))}%"></b></i></span></div>
       <div class="msg"><div class="bot"><svg viewBox="0 0 30 20" aria-hidden="true"><circle cx="10" cy="10" r="9" fill="var(--rail-accent)"></circle><circle cx="20" cy="10" r="9" fill="var(--bk)" fill-opacity=".9"></circle><circle cx="15" cy="10" r="4" fill="var(--rail-ink)"></circle></svg></div><div>
         <div class="from">Know Your Neighbors <span class="app-tag">APP</span><time>Day ${cycle.day}, 9:00 AM</time></div>
         <div class="text">${esc(introMessage(pair, ids))}</div>
-        <div class="actions">${acked ? '<span class="acked">✓ Marked as met</span>' : `<button type="button" class="btn sm primary" data-ack="${esc(pair.id)}">We met ☕</button><button type="button" class="btn sm" data-skip="${esc(pair.id)}">Not this time</button>`}</div>
+        <div class="actions">${acked ? '<span class="acked">✓ Marked as met</span>' : canAck ? `<button type="button" class="btn sm primary" data-ack="${esc(pair.id)}">We met ☕</button><button type="button" class="btn sm" data-skip="${esc(pair.id)}">Not this time</button>` : '<span class="small muted">Not yet acknowledged</span>'}</div>
       </div></div>
     </div>`;
   }
 
-  // ----- pilot -----
+  // ----- admin: overview -----
   function sparkline(values, opts) {
     const o = opts || {};
     const w = 200, h = 38, pad = 3;
@@ -541,70 +684,220 @@
     return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" aria-label="${esc(o.label || '')}" role="img"><polygon points="${area}" fill="var(--accent-soft)"></polygon><polyline points="${line}" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linejoin="round"></polyline><circle cx="${last[0]}" cy="${last[1]}" r="3" fill="var(--accent)"></circle></svg>`;
   }
 
-  function renderPilot() {
+  function attentionItems(m) {
+    const next = nextCycle(state.today, state.cycles.length);
+    const items = [];
+    if (next) items.push({ lvl: next.daysAway <= 7 ? 'warn' : 'good', k: `Cycle ${next.n}`, text: `Runs on Day ${next.day}, ${next.daysAway} day${next.daysAway === 1 ? '' : 's'} away. ${everyone().length} people will be paired.`, action: ['cycles', 'Open cycles'] });
+    const last = state.cycles[state.cycles.length - 1];
+    if (last && state.today - last.day < 3) items.push({ lvl: 'good', k: `Cycle ${last.n} sent`, text: `${last.pairs.length} intros went out on Day ${last.day}. Acknowledgments usually land within a week; nothing to do yet.`, action: ['cycles', 'See intros'] });
+    else if (last) { const open = last.pairs.filter((p) => !isAcked(p.id)).length; if (open) items.push({ lvl: open / last.pairs.length > 0.5 ? 'bad' : 'warn', k: 'Unacknowledged', text: `${open} of ${last.pairs.length} intros from cycle ${last.n} haven't been marked met. A nudge DM goes out on day 7.`, action: ['cycles', 'See which'] }); }
+    if (m.optIn.rate < TARGETS.optIn) items.push({ lvl: 'warn', k: 'Opt-in', text: `${pct(m.optIn.rate)} of eligible staff, against a ${pct(TARGETS.optIn)} target. Worth a second announcement before cycle ${next ? next.n : 4}.`, action: ['settings', 'Announcement copy'] });
+    const deptCounts = {}; for (const p of everyone()) deptCounts[p.department] = (deptCounts[p.department] || 0) + 1;
+    const missing = DEPARTMENTS.filter((d) => !deptCounts[d]); const thin = DEPARTMENTS.filter((d) => deptCounts[d] === 1);
+    if (missing.length) items.push({ lvl: 'bad', k: 'Coverage', text: `No one from ${listify(missing)} yet. The silo test needs every function.`, action: ['participants', 'Participants'] });
+    else if (thin.length) items.push({ lvl: 'warn', k: 'Coverage', text: `Only one person from ${listify(thin)}. One more each makes cross-team pairs likelier.`, action: ['participants', 'Participants'] });
+    const outs = state.profiles.filter((p) => !p.optedIn).length; if (outs) items.push({ lvl: 'good', k: 'Opt-outs', text: `${outs} ${outs === 1 ? 'person has' : 'people have'} left. Normal for a pilot; no follow-up unless it clusters in one team.`, action: ['participants', 'Participants'] });
+    const lonely = everyone().filter((p) => everyone().filter((q) => q.id !== p.id && neighborhoodInfo(q.neighborhood).borough === neighborhoodInfo(p.neighborhood).borough).length === 0);
+    if (lonely.length) items.push({ lvl: 'warn', k: 'Far commuters', text: `${listify(lonely.map((p) => p.name.split(' ')[0]))} ${lonely.length === 1 ? 'is' : 'are'} the only one from their borough, so they match on interests alone.`, action: ['participants', 'Participants'] });
+    return items;
+  }
+
+  function renderOverview() {
     const m = metrics();
     const weeks = m.week;
     const viewsByWeek = Array.from({ length: weeks }, (_, i) => state.events.filter((e) => e.type === 'directory_view' && e.day <= state.today && weekForDay(e.day) === i + 1).length);
     const optInByWeek = Array.from({ length: weeks }, (_, i) => { const s = new Set(); for (const e of state.events) { if (e.day > (i + 1) * 7) continue; if (e.type === 'opt_in') s.add(e.userId); if (e.type === 'opt_out') s.delete(e.userId); } return s.size; });
     const ackByCycle = Object.keys(m.matches.perCycle).sort().map((k) => m.matches.perCycle[k]);
-    const crossDept = (() => { const ids = byId(); let cross = 0, total = 0; for (const c of state.cycles) for (const p of c.pairs) { total++; const depts = new Set(p.members.map((id) => ids[id] && ids[id].department)); if (depts.size > 1) cross++; } return total ? cross / total : 0; })();
-
+    const cross = crossShare();
     $('#tiles').innerHTML = `
-      <div class="tile"><span class="eyebrow">Opt-in rate</span><div class="big num">${pct(m.optIn.rate)}</div><div class="sub">${m.optIn.count} of ${m.optIn.eligible} corporate staff</div>${sparkline(optInByWeek, { label: 'Opted in, by week' })}</div>
-      <div class="tile"><span class="eyebrow">Directory usage</span><div class="big num">${m.directory.viewsThisWeek}<span>this week</span></div><div class="sub">${m.directory.views} views total · ${m.directory.uniqueViewers} people</div>${sparkline(viewsByWeek, { label: 'Directory views, by week' })}</div>
-      <div class="tile"><span class="eyebrow">Match acknowledgment</span><div class="big num">${pct(m.matches.rate)}</div><div class="sub">${m.matches.acknowledged} of ${m.matches.sent} intros marked “we met”</div>${sparkline(ackByCycle.length ? ackByCycle.map((c) => c.sent ? c.acknowledged / c.sent : 0) : [0], { label: 'Acknowledged share, by cycle' })}</div>
-      <div class="tile"><span class="eyebrow">Cross-team intros</span><div class="big num">${pct(crossDept)}</div><div class="sub">of all pairs crossed a department line</div><div class="small muted" style="margin-top:6px">The silo the proposal is aimed at.</div></div>`;
+      <div class="tile"><span class="eyebrow">Opt-in rate</span><div class="big num">${pct(m.optIn.rate)}</div><div class="sub">${m.optIn.count} of ${m.optIn.eligible} corporate staff · target ${pct(TARGETS.optIn)}</div>${sparkline(optInByWeek, { label: 'Opted in, by week' })}</div>
+      <div class="tile"><span class="eyebrow">Directory usage</span><div class="big num">${m.directory.viewsThisWeek}<span>this week</span></div><div class="sub">${m.directory.views} views total · ${m.directory.uniqueViewers} people have looked</div>${sparkline(viewsByWeek, { label: 'Directory views, by week' })}</div>
+      <div class="tile"><span class="eyebrow">Match acknowledgment</span><div class="big num">${pct(m.matches.rate)}</div><div class="sub">${m.matches.acknowledged} of ${m.matches.sent} intros marked "we met" · target ${pct(TARGETS.ack)}</div>${sparkline(ackByCycle.length ? ackByCycle.map((c) => c.sent ? c.acknowledged / c.sent : 0) : [0], { label: 'Acknowledged share, by cycle' })}</div>
+      <div class="tile"><span class="eyebrow">Cross-team intros</span><div class="big num">${pct(cross)}</div><div class="sub">of all pairs crossed a department line · target ${pct(TARGETS.cross)}</div><div class="small muted" style="margin-top:6px">The silo the proposal is aimed at.</div></div>`;
+    const items = attentionItems(m);
+    $('#attention').innerHTML = items.length ? items.map((it) => `<div class="item ${it.lvl}"><span class="k">${esc(it.k)}</span><span class="small">${esc(it.text)}</span><button type="button" class="btn sm ghost" data-view="${it.action[0]}">${esc(it.action[1])}</button></div>`).join('') : '<div class="empty">Nothing needs attention this week.</div>';
+    renderTimeline(m);
+    renderPilotPanels();
+  }
 
+  function renderTimeline(m) {
     const cur = m.phase;
     $('#timeline').innerHTML = `
       <div class="row" style="justify-content:space-between"><span class="eyebrow">90-day pilot calendar</span><span class="small muted">HR never commits to more than the next four weeks.</span></div>
-      <div class="phases" style="margin-top:14px">
+      <div class="phases">
         ${PHASES.map((ph, i) => `<div class="phase ${ph === cur ? 'current' : ''}"><span class="eyebrow">Phase ${i + 1} · ${ph.weeks}</span><b>${ph.name}</b><span class="small">${{ launch: 'Announce, open profiles and the directory. Zero budget.', run: 'Four match cycles, one every two weeks. No scope changes.', review: 'Compare against the numbers. Formalize, extend, or end.' }[ph.key]}</span></div>`).join('')}
         <div class="today-marker" data-label="Day ${Math.min(state.today, PILOT_DAYS)}" style="left:${Math.min(state.today, PILOT_DAYS) / PILOT_DAYS * 100}%"></div>
       </div>
       <div class="cycle-dots">${[1, 2, 3, 4].map((n) => `<span><i class="${state.cycles.length >= n ? 'done' : ''}"></i>Cycle ${n} · Day ${cycleDay(n)}</span>`).join('')}</div>`;
+  }
 
-    const ids = byId();
+  function renderPilotPanels() {
     const deptCounts = {}; for (const d of DEPARTMENTS) deptCounts[d] = 0; for (const p of everyone()) deptCounts[p.department] = (deptCounts[p.department] || 0) + 1;
     const maxDept = Math.max(1, ...Object.values(deptCounts));
     const hoodCounts = {}; for (const p of everyone()) { const b = neighborhoodInfo(p.neighborhood).borough; hoodCounts[b] = (hoodCounts[b] || 0) + 1; }
     $('#pilotPanels').innerHTML = `
       <div class="panel"><span class="eyebrow">Opted in, by department</span><div class="bars">${Object.entries(deptCounts).sort((a, b) => b[1] - a[1]).map(([d, n]) => `<div class="bar"><span>${esc(d)}</span><div class="track"><div class="fill" style="width:${n / maxDept * 100}%"></div></div><span class="n">${n}</span></div>`).join('')}</div><p class="small muted">Every corporate function represented is the point. A pilot that only Marketing joins isn't testing the silo problem.</p></div>
       <div class="panel"><span class="eyebrow">Opted in, by borough</span><div class="bars">${BOROUGHS.filter((b) => hoodCounts[b]).map((b) => `<div class="bar"><span class="row" style="gap:6px"><span class="bullet" style="background:${BOROUGH_VAR[b]}">${BOROUGH_CODE[b]}</span>${esc(b)}</span><div class="track"><div class="fill" style="width:${hoodCounts[b] / Math.max(...Object.values(hoodCounts)) * 100}%;background:${BOROUGH_VAR[b]}"></div></div><span class="n">${hoodCounts[b]}</span></div>`).join('')}</div><p class="small muted">Matches follow the map: a Queens-heavy sign-up means more Astoria pairs.</p></div>
-      <div class="decision"><b>Week 12 decision</b><p class="small">Compare the three numbers above against the evidence base in the proposal, then pick one with HR:</p><p class="small"><b>Formalize</b> · <b>Extend</b> another 90 days · <b>End</b> the pilot.</p><p class="small muted">Ending it is a legitimate outcome, not a failure. That's the point of running it as a pilot.</p></div>`;
+      <div class="decision"><b>Week 12 decision</b><p class="small">Compare the numbers against the targets, then pick one with HR:</p><p class="small"><b>Formalize</b> · <b>Extend</b> another 90 days · <b>End</b> the pilot.</p><p class="small muted">Ending it is a legitimate outcome, not a failure. That's the point of running it as a pilot.</p><button type="button" class="btn sm" data-view="review" style="justify-self:start">Open the review worksheet</button></div>`;
+  }
+
+  // ----- admin: participants -----
+  function participantRows() {
+    const all = [...(state.me.optedIn || state.events.some((e) => e.userId === 'me') ? [state.me] : []), ...state.profiles];
+    return all.map((p) => {
+      const pairs = state.cycles.flatMap((c) => c.pairs.filter((x) => x.members.includes(p.id)));
+      const met = pairs.filter((x) => isAcked(x.id)).length;
+      const views = state.events.filter((e) => e.type === 'directory_view' && e.userId === p.id).length;
+      return { p, pairs: pairs.length, met, views };
+    });
+  }
+  function renderParticipants() {
+    const { q, dept, status } = state.part;
+    const sel = $('#partDept'); if (!sel.options.length) sel.innerHTML = `<option value="all">All departments</option>${DEPARTMENTS.map((d) => `<option>${esc(d)}</option>`).join('')}`;
+    sel.value = dept; $('#partStatus').value = status; if ($('#partSearch').value !== q) $('#partSearch').value = q;
+    const needle = q.trim().toLowerCase();
+    const rows = participantRows()
+      .filter((r) => dept === 'all' || r.p.department === dept)
+      .filter((r) => status === 'all' || (status === 'in' ? r.p.optedIn : status === 'out' ? !r.p.optedIn : r.p.optedIn && r.pairs > 0 && r.met === 0))
+      .filter((r) => !needle || [r.p.name, r.p.department, r.p.neighborhood, neighborhoodInfo(r.p.neighborhood).borough].some((x) => String(x).toLowerCase().includes(needle)))
+      .sort((a, b) => Number(b.p.optedIn) - Number(a.p.optedIn) || a.p.name.localeCompare(b.p.name));
+    const all = participantRows();
+    $('#partSummary').textContent = `${rows.length} shown · ${all.filter((r) => r.p.optedIn).length} in, ${all.filter((r) => !r.p.optedIn).length} out`;
+    $('#partTable').innerHTML = `<table><thead><tr><th>Person</th><th>Department</th><th>Neighborhood</th><th>Interests &amp; teams</th><th class="num">Directory views</th><th class="num">Intros</th><th class="num">Met</th><th>Status</th></tr></thead><tbody>${rows.map(({ p, pairs, met, views }) => `<tr>
+      <td><div class="who">${avatar(p)}<div><b>${esc(p.name)}</b>${p.id === 'me' ? ' <span class="muted small">(you)</span>' : ''}<div class="small muted">${esc(p.title || '')}</div></div></div></td>
+      <td>${esc(p.department)}</td>
+      <td><span class="row" style="gap:6px;flex-wrap:nowrap">${bullet(p.neighborhood)}${esc(p.neighborhood)}</span></td>
+      <td><span class="small muted">${esc([...(p.interests || []), ...(p.teams || [])].join(', '))}</span></td>
+      <td class="num">${views}</td><td class="num">${pairs}</td><td class="num">${met}${pairs ? ` <span class="muted small">/ ${pairs}</span>` : ''}</td>
+      <td>${p.optedIn ? (pairs && !met ? '<span class="pill warn">In · no met yet</span>' : '<span class="pill good">Opted in</span>') : '<span class="pill off">Opted out</span>'}</td>
+    </tr>`).join('')}</tbody></table>${rows.length ? '' : '<div class="empty">No one matches those filters.</div>'}`;
+  }
+  function participantsCsv() {
+    const head = ['Name', 'Department', 'Title', 'Neighborhood', 'Borough', 'Interests', 'Teams', 'Restaurants', 'Directory views', 'Intros', 'Met', 'Status'];
+    const q = (v) => `"${String(v == null ? '' : v).replace(/"/g, '""')}"`;
+    const lines = participantRows().map(({ p, pairs, met, views }) => [p.name, p.department, p.title || '', p.neighborhood, neighborhoodInfo(p.neighborhood).borough, (p.interests || []).join('; '), (p.teams || []).join('; '), (p.restaurants || []).join('; '), views, pairs, met, p.optedIn ? 'in' : 'out'].map(q).join(','));
+    return [head.map(q).join(','), ...lines].join('\n');
+  }
+
+  // ----- admin: cycles -----
+  function renderCycles() {
+    const next = nextCycle(state.today, state.cycles.length);
+    const W = KYN.WEIGHTS;
+    $('#cycleBar').innerHTML = `
+      <div>
+        <div style="font-family:var(--display);font-weight:700">${next ? `Cycle ${next.n} runs on Day ${next.day} (Week ${weekForDay(next.day)}) · ${everyone().length} people opted in` : 'Four cycles done. The Run phase is complete.'}</div>
+        <div class="weights"><span>Same neighborhood <b>+${W.sameNeighborhood}</b></span><span>Nearby <b>+${W.nearbyNeighborhood}</b></span><span>Same borough <b>+${W.sameBorough}</b></span><span>Shared restaurant <b>+${W.sharedRestaurant} each</b></span><span>Shared team <b>+${W.sharedTeam} each</b></span><span>Shared interest <b>+${W.sharedInterest} each</b></span><span>Different teams <b>+${W.crossDepartment}</b></span><span>Repeat pair <b>never</b></span></div>
+      </div>
+      <button type="button" class="btn primary" id="runCycleBtn" ${next ? '' : 'disabled'}>${next ? `Fast-forward to Day ${next.day} and run cycle ${next.n}` : 'No cycles left'}</button>`;
+    const ids = byId();
+    const cycles = [...state.cycles].reverse();
+    $('#cycleList').innerHTML = cycles.length ? cycles.map((c, idx) => {
+      const acked = c.pairs.filter((p) => isAcked(p.id)).length;
+      const trios = c.pairs.filter((p) => p.trio).length;
+      return `<details class="cycle" ${idx === 0 ? 'open' : ''}><summary>Cycle ${c.n} <span class="meta">Day ${c.day} · Week ${weekForDay(c.day)} · ${c.pairs.length} intros${trios ? ` (${trios} trio)` : ''} · ${acked} acknowledged (${pct(c.pairs.length ? acked / c.pairs.length : 0)})</span></summary><div class="dm-list">${c.pairs.map((pair) => renderDM(pair, ids, c, false)).join('')}</div></details>`;
+    }).join('') : '<div class="empty">No cycles yet.</div>';
+  }
+
+  // ----- admin: review -----
+  function renderReview() {
+    const m = metrics();
+    const ids = new Set(everyone().map((p) => p.id));
+    const viewers = new Set(state.events.filter((e) => e.type === 'directory_view' && e.day <= state.today && ids.has(e.userId)).map((e) => e.userId)).size;
+    const reach = ids.size ? Math.min(1, viewers / ids.size) : 0;
+    const cross = crossShare();
+    const rows = [
+      { m: 'Opt-in rate', bench: 'Gallup: only 2 in 10 U.S. employees have a best friend at work', v: pct(m.optIn.rate), t: `≥ ${pct(TARGETS.optIn)} of ${m.optIn.eligible} eligible`, ok: m.optIn.rate >= TARGETS.optIn, near: m.optIn.rate >= TARGETS.optIn * 0.7 },
+      { m: 'Directory reach', bench: 'Donut: browsable profiles are the feature people come back for', v: pct(reach), t: `≥ ${pct(TARGETS.directoryReach)} of participants have browsed`, ok: reach >= TARGETS.directoryReach, near: reach >= TARGETS.directoryReach * 0.7 },
+      { m: 'Match acknowledgment', bench: 'Proximity + similarity: the intro only works if people actually meet', v: pct(m.matches.rate), t: `≥ ${pct(TARGETS.ack)} of intros marked met`, ok: m.matches.rate >= TARGETS.ack, near: m.matches.rate >= TARGETS.ack * 0.7 },
+      { m: 'Cross-team intros', bench: 'HBR: isolation tracks with silos, not headcount', v: pct(cross), t: `≥ ${pct(TARGETS.cross)} of pairs cross a department`, ok: cross >= TARGETS.cross, near: cross >= TARGETS.cross * 0.7 },
+    ];
+    const met = rows.filter((r) => r.ok).length;
+    $('#reviewTable').innerHTML = `<div class="row" style="justify-content:space-between"><span class="eyebrow">Targets, as of Day ${state.today}</span><span class="pill ${met >= 3 ? 'good' : met >= 2 ? 'warn' : 'bad'}">${met} of ${rows.length} on target</span></div>
+      ${rows.map((r) => `<div class="review-row"><div><div class="m">${esc(r.m)}</div><div class="bench">${esc(r.bench)}</div></div><div class="v num">${r.v}</div><div class="t">${esc(r.t)}</div><span class="pill ${r.ok ? 'good' : r.near ? 'warn' : 'bad'}">${r.ok ? 'On target' : r.near ? 'Close' : 'Below'}</span></div>`).join('')}
+      <p class="small muted">Targets were set at launch and don't move mid-pilot. The benchmarks are the sources cited in the proposal; they frame the conversation, they aren't pass/fail lines.</p>`;
+    const d = state.review.decision;
+    $('#reviewSide').innerHTML = `
+      <div class="panel"><span class="eyebrow">Recommendation to HR</span><div class="options">
+        <button type="button" data-decision="formalize" aria-pressed="${d === 'formalize'}"><b>Formalize</b><span>Keep it running as a standing People &amp; Culture program. Add a budget line for one social a quarter.</span></button>
+        <button type="button" data-decision="extend" aria-pressed="${d === 'extend'}"><b>Extend 90 days</b><span>Numbers are close but not there. Re-announce, fix what the notes say, and review again at Day 180.</span></button>
+        <button type="button" data-decision="end" aria-pressed="${d === 'end'}"><b>End the pilot</b><span>A legitimate outcome. Thank participants, keep the directory read-only for 30 days, and write up what we learned.</span></button>
+      </div></div>
+      <div class="panel"><span class="eyebrow">Notes for the meeting</span><textarea id="reviewNotes" placeholder="What worked, what didn't, quotes from participants, anything HR should hear before the numbers.">${esc(state.review.notes)}</textarea><span class="small muted">Saved as you type. Only pilot admins see this.</span></div>`;
+  }
+
+  // ----- admin: settings -----
+  function renderSettings() {
+    const W = KYN.WEIGHTS;
+    const next = nextCycle(state.today, state.cycles.length);
+    const announcement = `Hi all. People & Culture is trying something small for the next 90 days: Know Your Neighbors, an opt-in Slack tool that introduces you to one colleague every two weeks who lives near you or likes what you like. It takes a minute to join (type /neighbors profile), only opted-in colleagues can see your profile, and you can leave any time with /neighbors leave. Zero budget, no obligation, and we'll share what we learned at Week 12.`;
+    $('#settingsBody').innerHTML = `
+      <div class="panel"><span class="eyebrow">Pilot settings</span>
+        <div class="field"><label for="setEligible">Eligible headcount</label><input type="number" id="setEligible" min="1" value="${state.settings.eligible}"><span class="hint">Corporate staff invited. The opt-in rate divides by this.</span></div>
+        <div class="field"><label for="setAdmins">Pilot admins</label><input type="text" id="setAdmins" value="${esc(state.settings.admins)}"><span class="hint">Who can run a cycle and see this console.</span></div>
+        <div class="kv"><span>Cycle cadence</span><b>Every 14 days</b><span>Cycles in the Run phase</span><b>4</b><span>Next cycle</span><b>${next ? `Day ${next.day}` : 'None left'}</b><span>Pilot length</span><b>${PILOT_DAYS} days</b></div>
+      </div>
+      <div class="panel"><span class="eyebrow">Matching weights <span class="muted" style="letter-spacing:0;text-transform:none;font-weight:400">· fixed for the pilot</span></span>
+        <div class="kv"><span>Same neighborhood</span><b>+${W.sameNeighborhood}</b><span>Nearby neighborhood</span><b>+${W.nearbyNeighborhood}</b><span>Same borough</span><b>+${W.sameBorough}</b><span>Each shared restaurant</span><b>+${W.sharedRestaurant}</b><span>Each shared team</span><b>+${W.sharedTeam}</b><span>Each shared interest</span><b>+${W.sharedInterest}</b><span>Different departments</span><b>+${W.crossDepartment}</b><span>Same department</span><b>${W.sameDepartment}</b><span>Repeat pair</span><b>never</b></div>
+        <p class="small muted">Changing weights mid-pilot would make cycle 1 and cycle 4 incomparable. Propose changes in the Week 12 notes instead.</p>
+      </div>
+      <div class="stack">
+        <div class="panel"><span class="eyebrow">Phase 1 launch checklist · ${state.checklist.filter(Boolean).length} of ${CHECKLIST.length}</span>
+          <div class="checklist">${CHECKLIST.map((t, i) => `<label class="${state.checklist[i] ? 'done' : ''}"><input type="checkbox" data-check="${i}" ${state.checklist[i] ? 'checked' : ''}><span>${esc(t)}</span></label>`).join('')}</div></div>
+        <div class="panel"><div class="row" style="justify-content:space-between"><span class="eyebrow">Announcement copy</span><button type="button" class="btn sm" id="copyAnnounce">Copy</button></div><div class="copybox" id="announceText">${esc(announcement)}</div></div>
+      </div>`;
   }
 
   // ----- render + events -----
+  const RENDER = { home: renderHome, profile: renderProfile, directory: renderDirectory, matches: renderMyMatches, overview: renderOverview, participants: renderParticipants, cycles: renderCycles, review: renderReview, settings: renderSettings };
   function render() {
     renderRail();
-    document.querySelectorAll('.view').forEach((v) => v.classList.toggle('active', v.id === 'view-' + state.view));
-    ({ profile: renderProfile, directory: renderDirectory, matches: renderMatches, pilot: renderPilot })[state.view]();
+    const v = currentView();
+    document.querySelectorAll('.view').forEach((el) => el.classList.toggle('active', el.id === 'view-' + v));
+    RENDER[v]();
     save();
   }
-
   function setView(v) {
-    state.view = v;
+    const mode = VIEWS.employee.some(([k]) => k === v) ? 'employee' : 'admin';
+    if (mode !== state.mode && LOCKED_MODE) return;
+    state.mode = mode; state.views[mode] = v;
     if (v === 'directory') state.events.push({ type: 'directory_view', day: state.today, userId: 'me' });
-    render();
-    window.scrollTo({ top: 0 });
+    render(); window.scrollTo({ top: 0 });
+  }
+  function copyText(text, okMsg) {
+    try { navigator.clipboard.writeText(text).then(() => toast(okMsg), () => toast('Copy blocked by the browser. Select the text instead.')); } catch (e) { toast('Copy blocked by the browser. Select the text instead.'); }
   }
 
   document.addEventListener('click', (ev) => {
     const t = ev.target.closest('button');
     if (!t) return;
     if (t.dataset.view) return setView(t.dataset.view);
-    if (t.id === 'resetBtn') { state = defaultState(); render(); toast('Demo reset to Day 38'); return; }
-    if (t.dataset.interest || t.dataset.team) {
-      const kind = t.dataset.interest ? 'interest' : 'team';
-      toggleChoice(kind, t.dataset[kind]); return;
-    }
+    if (t.dataset.mode) { state.mode = t.dataset.mode; render(); return; }
+    if (t.id === 'resetBtn') { const mode = state.mode; state = defaultState(); state.mode = LOCKED_MODE || mode; render(); toast('Demo reset to Day 38'); return; }
+    if (t.id === 'ffBtn' || t.id === 'runCycleBtn') return runNextCycle();
+    if (t.dataset.interest || t.dataset.team) { const kind = t.dataset.interest ? 'interest' : 'team'; toggleChoice(kind, t.dataset[kind]); return; }
     if (t.dataset.add) { addWriteIn(t.dataset.add); return; }
     if (t.id === 'leaveBtn') { state.me = { ...readForm(), optedIn: false }; state.events.push({ type: 'opt_out', day: state.today, userId: 'me' }); render(); toast('You left the pilot. Profile hidden.'); return; }
     if (t.dataset.borough) { state.dir.borough = t.dataset.borough; render(); return; }
     if (t.dataset.sayhi) { const p = byId()[t.dataset.sayhi]; toast(`In Slack this opens a DM with ${p.name.split(' ')[0]}`); return; }
-    if (t.dataset.ack) { state.events.push({ type: 'match_ack', day: state.today, pairId: t.dataset.ack, userId: 'me', cycle: state.cycles.find((c) => c.pairs.some((p) => p.id === t.dataset.ack)).n }); render(); toast('Logged. That\'s the only thing we track.'); return; }
+    if (t.dataset.ack) { const pairId = t.dataset.ack; const cyc = state.cycles.find((c) => c.pairs.some((p) => p.id === pairId)); const pair = cyc.pairs.find((p) => p.id === pairId); state.events.push({ type: 'match_ack', day: state.today, pairId, userId: pair.members.includes('me') ? 'me' : pair.members[0], cycle: cyc.n }); render(); toast('Logged. That\'s the only thing we track.'); return; }
     if (t.dataset.skip) { toast('No problem. New match next cycle.'); return; }
-    if (t.id === 'runCycleBtn') return runNextCycle();
+    if (t.dataset.decision) { state.review.decision = state.review.decision === t.dataset.decision ? '' : t.dataset.decision; render(); return; }
+    if (t.id === 'copyCsvBtn') return copyText(participantsCsv(), 'Participant list copied as CSV');
+    if (t.id === 'copyAnnounce') return copyText($('#announceText').textContent, 'Announcement copied');
+  });
+  document.addEventListener('change', (ev) => {
+    const el = ev.target;
+    if (el.dataset.check != null) { state.checklist[Number(el.dataset.check)] = el.checked; render(); return; }
+    if (el.id === 'setEligible') { state.settings.eligible = Math.max(1, Number(el.value) || 1); render(); return; }
+    if (el.id === 'setAdmins') { state.settings.admins = el.value; save(); return; }
+    if (el.id === 'partDept') { state.part.dept = el.value; renderParticipants(); save(); return; }
+    if (el.id === 'partStatus') { state.part.status = el.value; renderParticipants(); save(); return; }
+  });
+  document.addEventListener('input', (ev) => {
+    const el = ev.target;
+    if (el.id === 'dirSearch') { state.dir.q = el.value; renderDirectory(); save(); }
+    if (el.id === 'partSearch') { state.part.q = el.value; renderParticipants(); save(); }
+    if (el.id === 'reviewNotes') { state.review.notes = el.value; save(); }
   });
 
   function toggleChoice(kind, value) {
@@ -641,10 +934,9 @@
     state.me = { ...readForm(), optedIn: true };
     if (!was) state.events.push({ type: 'opt_in', day: state.today, userId: 'me' });
     render();
-    toast(was ? 'Profile saved' : `You're in. Next cycle includes you.`);
+    toast(was ? 'Profile saved' : 'You\'re in. Next cycle includes you.');
   });
   $('#profileForm').addEventListener('change', (ev) => { if (ev.target.matches('select, input') && !ev.target.id.startsWith('add-')) { const opted = state.me.optedIn; state.me = { ...readForm(), optedIn: opted }; renderProfile(); save(); } });
-  $('#dirSearch').addEventListener('input', (ev) => { state.dir.q = ev.target.value; renderDirectory(); save(); });
 
   function runNextCycle() {
     const next = nextCycle(state.today, state.cycles.length);
@@ -655,8 +947,8 @@
     const cycle = { n: next.n, day: next.day, pairs: res.pairs.map((p, i) => ({ id: `c${next.n}-${i + 1}`, ...p })) };
     state.cycles.push(cycle);
     for (const pair of cycle.pairs) state.events.push({ type: 'match_sent', day: next.day, cycle: next.n, pairId: pair.id, members: pair.members });
-    // the day-after bump in directory views that a cycle produces
     for (let k = 0; k < 4; k++) state.events.push({ type: 'directory_view', day: next.day, userId: people[k % people.length].id });
+    if (state.mode === 'employee') state.views.employee = state.me.optedIn ? 'matches' : 'home';
     render();
     const mine = cycle.pairs.find((p) => p.members.includes('me'));
     toast(mine ? `Cycle ${next.n} sent. You're matched with ${listify(mine.members.filter((id) => id !== 'me').map((id) => byId()[id].name.split(' ')[0]))}.` : `Cycle ${next.n} sent: ${cycle.pairs.length} intros.`);

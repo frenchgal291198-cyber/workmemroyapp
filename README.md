@@ -9,7 +9,7 @@ An opt-in Slack tool that connects BKSE corporate colleagues by home neighborhoo
 | Matching engine (neighborhood → nearby → borough → restaurants and teams → interests, never repeats a pair, odd counts form one trio) | `src/matching.js` | Real, tested |
 | Pilot metrics (opt-in rate, directory usage, match acknowledgment) from an event log | `src/metrics.js` | Real, tested |
 | Slack app: `/neighbors` slash command, profile modal, directory, match DMs with a "We met" button, App Home dashboard | `src/slack/` | Scaffolded, needs a Slack workspace to run |
-| Clickable web demo that stands in for the Slack UI | `demo/template.html` → `dist/index.html` | Ready to show |
+| Clickable web demo that stands in for the Slack UI, in three builds: `dist/index.html` (both audiences, with a role switch), `dist/employee.html` (employee app: Home, Profile, Directory, My matches), `dist/admin.html` (HR pilot console: Overview, Participants, Match cycles, Week 12 review, Settings & launch) | `demo/template.html` | Ready to show |
 
 Every person in the sample data is fictional.
 
@@ -20,7 +20,7 @@ npm install
 npm run demo        # builds dist/index.html and serves it at http://localhost:4173
 ```
 
-Or just run `npm run build:demo` and open `dist/index.html` in a browser. It works offline. Your edits persist in the browser; "Reset demo data" puts it back to Day 38 of the pilot.
+Or just run `npm run build:demo` and open `dist/index.html`, `dist/employee.html`, or `dist/admin.html` in a browser. It works offline. Your edits persist in the browser; "Reset demo data" puts it back to Day 38 of the pilot.
 
 ## Run the tests
 
