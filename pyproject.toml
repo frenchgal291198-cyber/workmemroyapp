@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "bragbook"
+version = "0.1.0"
+description = "Tracks your computer activity locally and turns it into achievements and a brag book."
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = []
+
+[project.scripts]
+bragbook = "bragbook.cli:main"
+
+[tool.setuptools]
+packages = ["bragbook"]
