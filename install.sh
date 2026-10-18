@@ -41,12 +41,33 @@ for rc in "$HOME/.zshrc" "$HOME/.bashrc"; do
   fi
 done
 
-echo
 echo "✅ Brag Book installed."
+
+# Restart the background tracker so it runs this version, then open the page.
+if [ "$(uname)" = "Darwin" ]; then
+  echo "Starting the tracker…"
+  "$BIN_DIR/bragbook" autostart install
+  for _ in $(seq 1 15); do
+    if [ "$(curl -s --max-time 1 http://127.0.0.1:8642/health 2>/dev/null)" = "bragbook" ]; then
+      echo
+      echo "🎉 Your page is live: http://localhost:8642  (opening it now; bookmark it!)"
+      open "http://localhost:8642"
+      exit 0
+    fi
+    sleep 1
+  done
+  echo
+  echo "⚠️  The tracker didn't start. Copy everything below and send it to Claude:"
+  echo "----------------------------------------------------------------"
+  sw_vers -productVersion 2>/dev/null || true
+  python3 --version 2>&1 || true
+  launchctl list 2>/dev/null | grep -i bragbook || echo "(not in launchctl list)"
+  tail -n 25 "$HOME/.bragbook/tracker.log" 2>/dev/null || echo "(no tracker log)"
+  echo "----------------------------------------------------------------"
+  echo "Meanwhile, you can still open the page by running:  $BIN_DIR/bragbook dashboard"
+  exit 1
+fi
+
 echo
-echo "Next, open a NEW Terminal window (so it picks up the new command) and run:"
-echo "    bragbook check"
-echo "    bragbook autostart install"
-echo
-echo "Or use it right now in this window with the full path:"
-echo "    $BIN_DIR/bragbook check"
+echo "Next, open a NEW terminal window and run:  bragbook track"
+echo "Then go to http://localhost:8642"
