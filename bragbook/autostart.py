@@ -7,6 +7,9 @@ import sys
 from pathlib import Path
 
 LABEL = "com.bragbook.tracker"
+# The folder that contains the bragbook package, so the background job can find it
+# even when it was installed by install.sh rather than pip.
+PKG_PARENT = str(Path(__file__).resolve().parent.parent)
 
 
 def _mac_path() -> Path:
@@ -35,6 +38,7 @@ def install() -> str:
 <plist version="1.0"><dict>
   <key>Label</key><string>{LABEL}</string>
   <key>ProgramArguments</key><array><string>{py}</string><string>-m</string><string>bragbook</string><string>track</string></array>
+  <key>EnvironmentVariables</key><dict><key>PYTHONPATH</key><string>{PKG_PARENT}</string></dict>
   <key>RunAtLoad</key><true/>
   <key>KeepAlive</key><true/>
   <key>StandardOutPath</key><string>{log}</string>
@@ -58,7 +62,7 @@ def install() -> str:
         path = _linux_path()
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(f"[Desktop Entry]\nType=Application\nName=Brag Book tracker\n"
-                        f"Exec={py} -m bragbook track\nX-GNOME-Autostart-enabled=true\nNoDisplay=true\n")
+                        f"Exec=env PYTHONPATH={PKG_PARENT} {py} -m bragbook track\nX-GNOME-Autostart-enabled=true\nNoDisplay=true\n")
         return f"Installed {path}. Brag Book will start at your next login (run `bragbook track` to start now)."
     return f"Autostart isn't supported on {system}. Run `bragbook track` instead."
 

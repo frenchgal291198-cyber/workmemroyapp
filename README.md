@@ -11,13 +11,22 @@ You don't have to remember to write things down. The tracker keeps the receipts,
 
 ## Get started (3 steps)
 
-Requires Python 3.9+. No other dependencies.
+**Mac / Linux:** open Terminal, paste this and press Enter:
 
 ```bash
-pip install git+https://github.com/frenchgal291198-cyber/workmemroyapp.git   # or: pip install .
+curl -fsSL https://raw.githubusercontent.com/frenchgal291198-cyber/workmemroyapp/claude/activity-brag-book-tool-9ekn2h/install.sh | bash
+```
+
+Then **open a new Terminal window** and run:
+
+```bash
 bragbook check               # confirms it can see your windows
 bragbook autostart install   # runs in the background from now on, at every login
 ```
+
+If the installer says you need Python, run `xcode-select --install`, click **Install** in the pop-up, then paste the installer line again.
+
+**Windows, or if you prefer pip:** `pip install git+https://github.com/frenchgal291198-cyber/workmemroyapp.git@claude/activity-brag-book-tool-9ekn2h` (needs Python 3.9+).
 
 That's it. To see what a report looks like before you have any data:
 
@@ -25,7 +34,7 @@ That's it. To see what a report looks like before you have any data:
 bragbook demo
 ```
 
-**macOS:** the first time, allow your Terminal (or Python) under **System Settings → Privacy & Security → Accessibility** so it can read window titles.
+**macOS:** the first time, macOS will ask to let Terminal (and, for the background tracker, `python3` / `osascript`) control your computer. Say **OK**, or turn them on under **System Settings → Privacy & Security → Accessibility**, so Brag Book can read window titles. If `bragbook today` shows no time after a while, that permission is the usual culprit.
 **Linux:** needs X11 plus `xdotool` (and `xprintidle` for idle detection). Wayland isn't supported yet.
 **Windows:** works out of the box.
 
