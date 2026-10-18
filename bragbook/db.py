@@ -42,7 +42,7 @@ CREATE TABLE IF NOT EXISTS meta (
 
 class DB:
     def __init__(self, path: Path):
-        self.conn = sqlite3.connect(str(path))
+        self.conn = sqlite3.connect(str(path), timeout=10)
         self.conn.row_factory = sqlite3.Row
         self.conn.executescript(SCHEMA)
 
@@ -69,6 +69,9 @@ class DB:
 
     def first_sample_ts(self) -> Optional[float]:
         return self.conn.execute("SELECT MIN(ts) FROM samples").fetchone()[0]
+
+    def last_sample_ts(self) -> Optional[float]:
+        return self.conn.execute("SELECT MAX(ts) FROM samples").fetchone()[0]
 
     def delete_samples_since(self, ts: float) -> int:
         with self.conn:

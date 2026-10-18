@@ -28,7 +28,9 @@ If the installer says you need Python, run `xcode-select --install`, click **Ins
 
 **Windows, or if you prefer pip:** `pip install git+https://github.com/frenchgal291198-cyber/workmemroyapp.git@claude/activity-brag-book-tool-9ekn2h` (needs Python 3.9+).
 
-That's it. To see what a report looks like before you have any data:
+That's it. **Now open http://localhost:8642 and bookmark it.** That's your page (see below).
+
+To see what a report looks like before you have any data:
 
 ```bash
 bragbook demo
@@ -38,13 +40,25 @@ bragbook demo
 **Linux:** needs X11 plus `xdotool` (and `xprintidle` for idle detection). Wayland isn't supported yet.
 **Windows:** works out of the box.
 
+## Your page: http://localhost:8642
+
+While the tracker runs (it does automatically after `autostart install`), your page lives at **http://localhost:8642**. Bookmark it, or run `bragbook dashboard` to open it. It only works on your own computer.
+
+- **Timeline** (home): your day as a color-coded strip plus a card for each work session, in the style of [Dayflow](https://www.dayflow.so/). Each card shows what you worked on, for how long, breaks, and when Slack or email pulled you away. Use ← → to flip through past days.
+- **Brag book:** wins, achievements, drafted review bullets and where your time went, by Today / Week / Month / Quarter / Year.
+- **Log a win** box at the top of every page, plus **Pause 1 hour** if you need privacy.
+
+Unlike Dayflow, it doesn't record your screen. The timeline is built from window titles, so it's lightweight and nothing leaves your Mac.
+
 ## Everyday use
 
 | You want to… | Run |
 |---|---|
 | Log a win (it'll prompt you) | `bragbook win` |
 | Log a win in one line | `bragbook win "Ran the ops playbook workshop" -i "4 depts aligned" -t ops` |
+| Open your page | `bragbook dashboard` (or just go to http://localhost:8642) |
 | See today at a glance | `bragbook today` |
+| Today as a timeline, in the terminal | `bragbook timeline` (or `--date 2026-10-16`) |
 | See your trophy case | `bragbook badges` |
 | Build your brag book | `bragbook report --week` (or `--month`, `--quarter`, `--year`, `--from 2026-07-01`) |
 | Get it as text for a doc/email | `bragbook report --quarter --format md` |

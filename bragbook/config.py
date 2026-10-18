@@ -86,6 +86,8 @@ DEFAULTS = {
     "end_of_day_nudge": True,
     # Show desktop notifications when you unlock an achievement.
     "notify_achievements": True,
+    # The dashboard page lives at http://localhost:<port> while the tracker runs.
+    "dashboard_port": 8642,
     # Never record windows from these apps, or whose titles contain these words.
     "exclude": {
         "apps": ["1password", "keychain access", "bitwarden", "lastpass", "dashlane"],

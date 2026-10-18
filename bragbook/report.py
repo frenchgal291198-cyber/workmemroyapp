@@ -155,7 +155,7 @@ def build(db, cfg: dict, first: date, last: date, label: str) -> BragData:
 # --- Markdown ---------------------------------------------------------------
 
 def to_markdown(d: BragData) -> str:
-    lines = [f"# Brag Book: {d.label}", f"_{mdy(d.first)} – {mdy(d.last)}_", ""]
+    lines = [f"# Brag Book: {d.label}", f"_{span(d.first, d.last)}_", ""]
     lines += [" · ".join(f"**{v}** {k.lower()}" for k, v in d.stats.items()), ""]
     lines += ["## Wins", ""]
     if d.wins:
@@ -267,7 +267,24 @@ footer{color:var(--muted);font-size:12px;margin-top:28px;text-align:center}
   .bars .lbl{margin-top:6px}
   section{padding:18px 16px}
 }
-@media print{body{background:#fff}section,.stat{break-inside:avoid}button{display:none}}
+/* live dashboard */
+.status{display:flex;align-items:center;gap:8px;flex-wrap:wrap;color:var(--text-2);font-size:13px;margin:-12px 0 16px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--muted);flex:none}
+.dot.on{background:#16a34a}.dot.off{background:#dc2626}.dot.paused{background:#d97706}
+.status form{display:inline;margin:0}
+.linkbtn{font:inherit;font-size:13px;background:none;border:0;color:var(--accent);cursor:pointer;padding:0;text-decoration:underline}
+nav.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 16px}
+nav.tabs a{color:var(--text-2);text-decoration:none;border:1px solid var(--border);border-radius:999px;padding:5px 14px;font-size:14px;background:var(--surface)}
+nav.tabs a.on{background:var(--text);color:var(--bg);border-color:var(--text)}
+form.winform{background:var(--surface);border:2px solid var(--accent);border-radius:14px;padding:16px;margin:0 0 18px;display:grid;gap:10px}
+form.winform label{font-weight:600}
+form.winform .row{display:grid;grid-template-columns:1fr 1fr auto;gap:10px}
+form.winform input{font:inherit;width:100%;border:1px solid var(--border);border-radius:8px;padding:9px 11px;background:var(--bg);color:var(--text)}
+form.winform input:focus{outline:2px solid var(--accent);outline-offset:1px}
+form.winform button{font:inherit;font-weight:600;border:0;border-radius:8px;padding:9px 18px;background:var(--accent);color:#fff;cursor:pointer}
+.flash{background:var(--win-soft);color:var(--win);border-radius:10px;padding:10px 14px;margin:0 0 16px;font-weight:600}
+@media (max-width:640px){form.winform .row{grid-template-columns:1fr}}
+@media print{body{background:#fff}section,.stat{break-inside:avoid}button,nav.tabs,form.winform,.status{display:none}}
 """
 
 
@@ -288,7 +305,12 @@ def mdy(d: date) -> str:
     return f"{md(d)}, {d.year}"
 
 
-def to_html(d: BragData) -> str:
+def span(first: date, last: date) -> str:
+    return mdy(first) if first == last else f"{mdy(first)} – {mdy(last)}"
+
+
+def to_html(d: BragData, top_html: str = "") -> str:
+    """The brag book page. `top_html` lets the live dashboard add its controls above the stats."""
     text = json.dumps(to_markdown(d)).replace("<", "\\u003c")
     stats = "".join(f'<div class="stat"><b>{_e(v)}</b><span>{_e(k)}</span></div>' for k, v in d.stats.items())
 
@@ -354,8 +376,9 @@ def to_html(d: BragData) -> str:
 <title>Brag Book</title><style>{CSS}</style></head>
 <body><div class="wrap">
 <header><div><div class="eyebrow">Brag Book</div><h1>{_e(d.label)}</h1>
-<div class="range">{mdy(d.first)} – {mdy(d.last)}</div></div>
+<div class="range">{span(d.first, d.last)}</div></div>
 <button class="copy" id="copy">Copy as text</button></header>
+{top_html}
 <div class="stats">{stats}</div>
 <section><div class="head"><div><h2>Wins</h2><p class="sub">The things you'd want your boss to remember.</p></div></div>{wins}</section>
 {drafts_html}

@@ -99,6 +99,15 @@ def cmd_today(args):
         print("No win logged yet today. `bragbook win` takes 10 seconds.")
 
 
+def cmd_timeline(args):
+    from bragbook import timeline
+    db, cfg = _db(), config.load()
+    day = date.fromisoformat(args.date) if args.date else date.today()
+    start, end = A.day_range(day, day)
+    print(f"{day:%A}, {report.mdy(day)}\n")
+    print(timeline.to_text(timeline.sessions(A.load_samples(db, cfg, start, end))))
+
+
 def cmd_badges(args):
     db, cfg = _db(), config.load()
     first_ts = db.first_sample_ts()
@@ -147,6 +156,26 @@ def cmd_report(args):
     print(f"Brag book written to {out}")
     if args.format == "html" and not args.no_open:
         webbrowser.open(out.resolve().as_uri())
+
+
+def cmd_dashboard(args):
+    from bragbook import server
+    port = config.load()["dashboard_port"]
+    link = server.url(port)
+    if server.is_running(port):
+        print(f"Opening {link}")
+        webbrowser.open(link)
+        return
+    print(f"The tracker isn't running, so serving the dashboard from here: {link}")
+    print("Leave this window open while you use it (Ctrl+C to stop). "
+          "Tip: `bragbook autostart install` keeps it available all the time.")
+    srv = server.make_server(port, tracking=False)
+    if not args.no_open:
+        webbrowser.open(link)
+    try:
+        srv.serve_forever()
+    except KeyboardInterrupt:
+        print()
 
 
 def cmd_pause(args):
@@ -227,7 +256,14 @@ def build_parser():
     s.add_argument("id", type=int)
     s.set_defaults(fn=cmd_unwin)
 
+    s = sub.add_parser("dashboard", aliases=["open"], help="open your brag book page in the browser")
+    s.add_argument("--no-open", action="store_true", help=argparse.SUPPRESS)
+    s.set_defaults(fn=cmd_dashboard)
+
     sub.add_parser("today", help="quick look at today").set_defaults(fn=cmd_today)
+    s = sub.add_parser("timeline", help="your day as a timeline of sessions")
+    s.add_argument("--date", help="YYYY-MM-DD (default: today)")
+    s.set_defaults(fn=cmd_timeline)
     sub.add_parser("badges", aliases=["achievements"], help="your trophy case").set_defaults(fn=cmd_badges)
 
     s = sub.add_parser("pause", help="pause tracking (privacy mode)")

@@ -194,3 +194,82 @@ class CliTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TimelineTests(unittest.TestCase):
+    def test_sessions_fold_distractions_and_split_on_change(self):
+        from bragbook import timeline
+        c = cfg()
+        db = DB(config.db_path())
+        d = date(2026, 10, 7)
+        fill(db, at(d, 9), 60, "Microsoft PowerPoint", "Fan Roadmap.pptx - PowerPoint")
+        fill(db, at(d, 10), 1, "Slack", "general - Slack")                    # quick glance
+        fill(db, at(d, 10, 1), 40, "Microsoft PowerPoint", "Fan Roadmap.pptx - PowerPoint")
+        fill(db, at(d, 11), 30, "zoom.us", "Zoom Meeting")
+        start, end = A.day_range(d, d)
+        sess = timeline.sessions(A.load_samples(db, c, start, end))
+        self.assertEqual([s.category for s in sess], ["Presentations", "Meetings"])
+        self.assertEqual(sess[0].pulls, 1)
+        self.assertEqual(timeline.title(sess[0]), "Fan Roadmap")
+        self.assertEqual(timeline.title(sess[1]), "Zoom call")
+        self.assertIn("Pulled away 1×", timeline.summary(sess[0]))
+        html = timeline.page(db, c, d)
+        self.assertIn("Fan Roadmap", html)
+        self.assertIn('class="strip"', html)
+
+    def test_email_subjects_stay_off_the_timeline(self):
+        from bragbook import timeline
+        c = cfg()
+        db = DB(config.db_path())
+        d = date(2026, 10, 7)
+        fill(db, at(d, 9), 20, "Microsoft Outlook", "RE: salary review - Outlook")
+        start, end = A.day_range(d, d)
+        html = timeline.page(db, c, d)
+        self.assertNotIn("salary", html)
+
+
+class DashboardTests(unittest.TestCase):
+    def setUp(self):
+        import threading
+        from bragbook import server
+        cfg()
+        self.srv = server.make_server(0, tracking=True)
+        self.port = self.srv.server_address[1]
+        threading.Thread(target=self.srv.serve_forever, daemon=True).start()
+
+    def tearDown(self):
+        self.srv.shutdown()
+        self.srv.server_close()
+
+    def req(self, path, data=None, headers=None):
+        import urllib.error
+        import urllib.request
+        from urllib.parse import urlencode
+
+        class NoRedirect(urllib.request.HTTPRedirectHandler):
+            def redirect_request(self, *a, **k):
+                return None
+
+        r = urllib.request.Request(f"http://localhost:{self.port}{path}",
+                                   data=urlencode(data).encode() if data else None, headers=headers or {})
+        try:
+            resp = urllib.request.build_opener(NoRedirect).open(r)
+            return resp.status, resp.read().decode(), resp.headers
+        except urllib.error.HTTPError as e:
+            return e.code, e.read().decode(), e.headers
+
+    def test_pages_load(self):
+        for path in ("/", "/?d=2026-10-01", "/?d=nonsense", "/book?p=month", "/?p=week"):
+            self.assertEqual(self.req(path)[0], 200, path)
+
+    def test_log_win_from_page(self):
+        code, _, headers = self.req("/win", {"text": "Closed the deal", "impact": "$10M", "next": "/book?p=today"})
+        self.assertEqual(code, 303)
+        self.assertTrue(headers["Location"].startswith("/book?p=today&msg="))
+        self.assertIn("Closed the deal", self.req("/book?p=today")[1])
+
+    def test_rejects_other_sites(self):
+        self.assertEqual(self.req("/", headers={"Host": "evil.com"})[0], 403)
+        self.assertEqual(self.req("/win", {"text": "x"}, headers={"Origin": "https://evil.com"})[0], 403)
+        code, _, headers = self.req("/win", {"text": "x", "next": "//evil.com"})
+        self.assertEqual(headers["Location"].split("?")[0], "/")

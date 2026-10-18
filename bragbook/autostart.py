@@ -48,6 +48,7 @@ def install() -> str:
         subprocess.run(["launchctl", "unload", str(path)], capture_output=True)
         subprocess.run(["launchctl", "load", "-w", str(path)], capture_output=True)
         return (f"Installed {path}. The tracker is running now and will start at every login.\n"
+                "Your dashboard: http://localhost:8642 (bookmark it!)\n"
                 "If macOS asks, allow your Terminal / Python under System Settings → Privacy & Security → "
                 "Accessibility, so Brag Book can read window titles.")
     if system == "Windows":
@@ -57,7 +58,8 @@ def install() -> str:
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(f'CreateObject("Wscript.Shell").Run """{exe}"" -m bragbook track", 0, False\n')
         subprocess.Popen([exe, "-m", "bragbook", "track"], creationflags=0x08000000)
-        return f"Installed {path}. The tracker is running now and will start at every login."
+        return (f"Installed {path}. The tracker is running now and will start at every login.\n"
+                "Your dashboard: http://localhost:8642 (bookmark it!)")
     if system == "Linux":
         path = _linux_path()
         path.parent.mkdir(parents=True, exist_ok=True)

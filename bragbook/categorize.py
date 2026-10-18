@@ -10,7 +10,7 @@ NOISE = {
     "google drive", "powerpoint", "microsoft powerpoint", "word", "microsoft word", "excel",
     "microsoft excel", "keynote", "pages", "numbers", "figma", "canva", "miro", "notion",
     "confluence", "airtable", "asana", "monday.com", "trello", "jira", "smartsheet", "linear",
-    "visual studio code", "cursor", "tableau", "power bi", "lucidchart", "figjam",
+    "google search", "google", "youtube", "visual studio code", "cursor", "tableau", "power bi", "lucidchart", "figjam",
     "saved", "saved to this pc", "saved to onedrive", "saved to sharepoint", "autosaved",
     "read-only", "compatibility mode", "edited", "personal", "work", "profile 1", "profile 2",
 }

@@ -70,6 +70,12 @@ def run(db, cfg, verbose=False):
     idle_limit = cfg["idle_seconds"]
     print(f"Brag Book is tracking every {interval}s. Data stays in {config.home()}. Ctrl+C to stop.",
           flush=True)
+    from bragbook import server
+    port = cfg["dashboard_port"]
+    if server.start_background(port):
+        print(f"Your dashboard: {server.url(port)}", flush=True)
+    else:
+        print(f"Port {port} is busy, so the dashboard isn't being served by this tracker.", flush=True)
     last_eval = 0.0
     while True:
         started = time.time()
